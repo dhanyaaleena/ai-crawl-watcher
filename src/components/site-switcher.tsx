@@ -1,17 +1,30 @@
 "use client";
 
-import { ChevronsUpDown, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { SelectMenu } from "@/components/select-menu";
+
+/** Letter avatar for a domain (no favicon fetch, so no third-party request leaks the domain). */
+function SiteAvatar({ domain }: { domain: string }) {
+  return (
+    <span
+      className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-line-strong bg-surface-2 text-[10px] font-semibold uppercase text-ink-2"
+      aria-hidden="true"
+    >
+      {domain.replace(/^www\./, "").charAt(0)}
+    </span>
+  );
+}
 
 export function SiteSwitcher({
   sites,
   currentId,
-  idSuffix,
 }: {
   sites: { id: string; domain: string }[];
   currentId: string | null;
-  idSuffix: string;
+  /** Kept for callers; the menu generates its own ids. */
+  idSuffix?: string;
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -25,31 +38,30 @@ export function SiteSwitcher({
   }
 
   return (
-    <div className="relative">
-      <label htmlFor={`site-switcher-${idSuffix}`} className="sr-only">
-        Site
-      </label>
-      <select
-        id={`site-switcher-${idSuffix}`}
-        value={currentId ?? ""}
-        onChange={(e) => {
-          const id = e.target.value;
-          if (id === "__new") return router.push("/dashboard/new");
-          // Stay on the same view when switching sites.
-          const rest = currentId ? pathname.split(`/dashboard/${currentId}`)[1] ?? "" : "";
-          router.push(`/dashboard/${id}${rest}`);
-        }}
-        className="w-full appearance-none truncate rounded-md border border-line-strong bg-surface py-2 pl-2.5 pr-8 text-sm font-medium outline-none focus:border-accent"
-      >
-        {!currentId && <option value="">Choose a site</option>}
-        {sites.map((s) => (
-          <option key={s.id} value={s.id}>
-            {s.domain}
-          </option>
-        ))}
-        <option value="__new">+ Add another site</option>
-      </select>
-      <ChevronsUpDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-3" aria-hidden="true" />
-    </div>
+    <SelectMenu
+      label="Site"
+      value={currentId ?? ""}
+      placeholder="Choose a site"
+      options={sites.map((s) => ({ value: s.id, label: s.domain, leading: <SiteAvatar domain={s.domain} /> }))}
+      onChange={(id) => {
+        // Stay on the same view when switching sites.
+        const rest = currentId ? (pathname.split(`/dashboard/${currentId}`)[1] ?? "") : "";
+        router.push(`/dashboard/${id}${rest}`);
+      }}
+      search="Search sites…"
+      sectionLabel="Your sites"
+      footer={(close) => (
+        <Link
+          href="/dashboard/new"
+          onClick={close}
+          className="flex items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-sm text-ink-2 hover:bg-surface-2 hover:text-ink"
+        >
+          <Plus className="h-4 w-4 text-ink-3" aria-hidden="true" />
+          Add another site
+        </Link>
+      )}
+      fullWidth
+      triggerClassName="h-10 px-2.5 font-medium"
+    />
   );
 }

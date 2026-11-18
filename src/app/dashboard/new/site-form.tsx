@@ -29,10 +29,8 @@ export function SiteForm() {
           </button>
         </div>
       </label>
-      {state.error ? (
+      {state.error && (
         <p role="alert" className="text-sm text-critical">{state.error}</p>
-      ) : (
-        <p className="text-sm text-ink-3">Subdomains (www, blog, docs…) are tracked automatically.</p>
       )}
     </form>
   );

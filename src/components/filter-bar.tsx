@@ -4,12 +4,16 @@ import { X } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useOptimistic, useTransition } from "react";
 import { BOT_TYPES, PLATFORMS } from "../../supabase/functions/_shared/bots";
+import { SelectMenu } from "@/components/select-menu";
 import { RANGES } from "@/lib/filters";
+import { platformColor } from "@/lib/platforms";
 
-const selectClass =
-  "h-8 appearance-none rounded-md border border-line-strong bg-surface pl-2.5 pr-7 text-sm text-ink outline-none focus:border-accent bg-[length:14px] bg-[right_8px_center] bg-no-repeat";
-const chevron =
-  "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2375746f' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E\")";
+const dot = (color: string) => <span className="h-2 w-2 shrink-0 rounded-[2px]" style={{ background: color }} aria-hidden="true" />;
+const PLATFORM_OPTIONS = [
+  { value: "", label: "All platforms" },
+  ...PLATFORMS.map((p) => ({ value: p, label: p, leading: dot(platformColor(p)) })),
+];
+const TYPE_OPTIONS = [{ value: "", label: "All bot types" }, ...BOT_TYPES.map((t) => ({ value: t.value, label: t.label }))];
 
 export function FilterBar() {
   const router = useRouter();
@@ -64,21 +68,8 @@ export function FilterBar() {
         ))}
       </div>
 
-      <label className="sr-only" htmlFor="filter-platform">Platform</label>
-      <select id="filter-platform" value={platform} onChange={(e) => update("platform", e.target.value)} className={selectClass} style={{ backgroundImage: chevron }}>
-        <option value="">All platforms</option>
-        {PLATFORMS.map((p) => (
-          <option key={p} value={p}>{p}</option>
-        ))}
-      </select>
-
-      <label className="sr-only" htmlFor="filter-type">Bot type</label>
-      <select id="filter-type" value={type} onChange={(e) => update("type", e.target.value)} className={selectClass} style={{ backgroundImage: chevron }}>
-        <option value="">All bot types</option>
-        {BOT_TYPES.map((t) => (
-          <option key={t.value} value={t.value}>{t.label}</option>
-        ))}
-      </select>
+      <SelectMenu label="Platform" value={platform} options={PLATFORM_OPTIONS} onChange={(v) => update("platform", v)} triggerClassName="h-8 px-2.5" />
+      <SelectMenu label="Bot type" value={type} options={TYPE_OPTIONS} onChange={(v) => update("type", v)} triggerClassName="h-8 px-2.5" />
 
       {(platform || type) && (
         <button

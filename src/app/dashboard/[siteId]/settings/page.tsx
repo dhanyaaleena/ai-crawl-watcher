@@ -1,4 +1,4 @@
-import { Download } from "lucide-react";
+import { CircleCheck, Code2, Download } from "lucide-react";
 import type { Metadata } from "next";
 import { SampleDataTag } from "@/components/badges";
 import { Card } from "@/components/card";
@@ -6,18 +6,17 @@ import { CopyButton } from "@/components/copy-button";
 import { PageHeader } from "@/components/page-header";
 import { TRACK_ENDPOINT } from "@/lib/env";
 import { formatDateTime } from "@/lib/format";
-import { getLastEvent } from "@/lib/queries";
+import { getSetupSignals } from "@/lib/queries";
 import { headSnippet, bodySnippet, serverSnippet } from "@/lib/snippet";
 import { loadSitePage } from "../_data";
 import { DeleteSiteButton } from "./delete-site";
-import { InstallCheckButton } from "./install-check";
-import { InstallStatus } from "./install-status";
+import { SetupProgress } from "./install-status";
 
 export const metadata: Metadata = { title: "Settings" };
 
 export default async function SettingsPage({ params, searchParams }: PageProps<"/dashboard/[siteId]/settings">) {
   const { site, filters: f, sp } = await loadSitePage(params, searchParams);
-  const last = await getLastEvent(site.id);
+  const { lastReal: last, lastTest } = await getSetupSignals(site.id);
   const head = headSnippet(site.id, TRACK_ENDPOINT);
   const body = bodySnippet(site.id, TRACK_ENDPOINT);
   const server = serverSnippet(site.id, TRACK_ENDPOINT);
@@ -34,33 +33,40 @@ export default async function SettingsPage({ params, searchParams }: PageProps<"
       )}
 
       <div className="space-y-4">
-        <Card title="Tracking code">
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
+          <Card
+            title="Setup"
+            subtitle="Three steps"
+            icon={<CircleCheck />}
+            footer="Takes about two minutes. This card updates by itself when the first visit arrives."
+          >
+            <SetupProgress
+              siteId={site.id}
+              domain={site.domain}
+              installVerifiedAt={site.install_verified_at}
+              last={last && { id: last.id, timestamp: last.timestamp, bot_name: last.bot_name, page_path: last.page_path }}
+              lastTest={lastTest && { id: lastTest.id, timestamp: lastTest.timestamp, bot_name: lastTest.bot_name, page_path: lastTest.page_path }}
+            />
+          </Card>
+
+
+        <Card title="Tracking code" subtitle="Copy into your site" icon={<Code2 />}>
           <ol className="space-y-6">
-            <Step n={1} title="Paste this inside <head> on every page">
+            <Step n={1} title="Paste this inside <head> on every page" id="code-head">
               <Snippet code={head} />
               <p className="mt-2 text-xs text-ink-3">
                 Loads asynchronously and adds about 300 bytes to your page. Ordinary visitors are ignored; only crawlers are recorded.
               </p>
             </Step>
-            <Step n={2} title="Recommended: paste this right after <body>">
+            <Step n={2} title="Recommended: paste this right after <body>" id="code-body">
               <Snippet code={body} />
               <p className="mt-2 text-xs text-ink-3">
                 Many AI crawlers don’t run JavaScript. This 1×1 image catches the ones that still load images.
               </p>
             </Step>
-            <Step n={3} title="Confirm it’s live">
-              <InstallStatus
-                siteId={site.id}
-                last={last && { id: last.id, timestamp: last.timestamp, bot_name: last.bot_name, page_path: last.page_path }}
-              />
-              <div className="mt-4 border-t border-line pt-4">
-                <p className="mb-2 text-xs text-ink-3">Already published the snippet? Check that it’s on your homepage:</p>
-                <InstallCheckButton siteId={site.id} />
-              </div>
-            </Step>
           </ol>
 
-          <details className="mt-6 rounded-lg border border-line px-4 py-3 text-sm">
+          <details id="code-server" className="mt-6 scroll-mt-6 rounded-lg border border-line px-4 py-3 text-sm">
             <summary className="cursor-pointer font-medium text-ink-2">Catch every crawler with server-side forwarding</summary>
             <p className="mt-2 text-ink-3">
               Crawlers that skip both JavaScript and images are only visible to your server. Forward their requests from your
@@ -71,6 +77,7 @@ export default async function SettingsPage({ params, searchParams }: PageProps<"
             </div>
           </details>
         </Card>
+        </div>
 
         <Card title="Export">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -110,9 +117,9 @@ export default async function SettingsPage({ params, searchParams }: PageProps<"
   );
 }
 
-function Step({ n, title, children }: { n: number; title: string; children: React.ReactNode }) {
+function Step({ n, title, id, children }: { n: number; title: string; id?: string; children: React.ReactNode }) {
   return (
-    <li className="grid grid-cols-[1.5rem_1fr] gap-3">
+    <li id={id} className="grid scroll-mt-6 grid-cols-[1.5rem_1fr] gap-3">
       <span className="flex h-6 w-6 items-center justify-center rounded-full bg-surface-2 text-xs font-medium text-ink-2">{n}</span>
       <div className="min-w-0">
         <h3 className="mb-2 pt-0.5 text-sm font-medium">{title}</h3>

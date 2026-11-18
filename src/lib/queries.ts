@@ -4,6 +4,7 @@ import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { isValidTimeZone, rpcArgs, type Filters } from "@/lib/filters";
 import { STACK_ORDER, stackKey } from "@/lib/platforms";
+import { TEST_BOT_NAME } from "@/lib/test-visit";
 
 export interface Site {
   id: string;
@@ -11,11 +12,13 @@ export interface Site {
   created_at: string;
   /** Filled with generated demo data; the dashboard labels it "Sample data". */
   is_sample: boolean;
+  /** When "Check installation" last found the tracking code on the homepage. */
+  install_verified_at: string | null;
 }
 
 export const getSites = cache(async (): Promise<Site[]> => {
   const supabase = await createClient();
-  const { data, error } = await supabase.from("sites").select("id, domain, created_at, is_sample").order("created_at");
+  const { data, error } = await supabase.from("sites").select("id, domain, created_at, is_sample, install_verified_at").order("created_at");
   if (error) throw error;
   return data;
 });
@@ -168,20 +171,6 @@ export async function getActivity(
   return { rows: data as EventRow[], total: count ?? 0 };
 }
 
-/** Most recent event for the site regardless of filters (install status). */
-export async function getLastEvent(siteId: string): Promise<EventRow | null> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("crawler_events")
-    .select(EVENT_COLUMNS)
-    .eq("site_id", siteId)
-    .order("timestamp", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  if (error) throw error;
-  return data as EventRow | null;
-}
-
 export interface RecentVisit {
   id: string;
   timestamp: string;
@@ -203,4 +192,34 @@ export async function getRecentVisits(siteId: string, limit = 8): Promise<Recent
     .limit(limit);
   if (error) throw error;
   return data as RecentVisit[];
+}
+
+/**
+ * Evidence for the setup steps, kept separate: the newest real crawler visit
+ * and the newest "Send a test visit" visit. A test visit proves the tracker
+ * works, not that a crawler has come.
+ */
+export async function getSetupSignals(siteId: string): Promise<{ lastReal: EventRow | null; lastTest: EventRow | null }> {
+  const supabase = await createClient();
+  const [real, test] = await Promise.all([
+    supabase
+      .from("crawler_events")
+      .select(EVENT_COLUMNS)
+      .eq("site_id", siteId)
+      .neq("bot_name", TEST_BOT_NAME)
+      .order("timestamp", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    supabase
+      .from("crawler_events")
+      .select(EVENT_COLUMNS)
+      .eq("site_id", siteId)
+      .eq("bot_name", TEST_BOT_NAME)
+      .order("timestamp", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  ]);
+  if (real.error) throw real.error;
+  if (test.error) throw test.error;
+  return { lastReal: real.data as EventRow | null, lastTest: test.data as EventRow | null };
 }

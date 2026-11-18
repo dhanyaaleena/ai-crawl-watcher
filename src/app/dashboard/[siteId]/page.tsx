@@ -4,7 +4,6 @@ import { SampleDataTag } from "@/components/badges";
 import { Card } from "@/components/card";
 import { EmptyState } from "@/components/empty-state";
 import { LearnVsCite } from "@/components/learn-vs-cite";
-import { DeltaPill } from "@/components/delta-pill";
 import { LiveLog } from "@/components/live-log";
 import { PageHeader } from "@/components/page-header";
 import { PlatformBars } from "@/components/platform-bars";
@@ -46,30 +45,29 @@ export default async function OverviewPage({ params, searchParams }: PageProps<"
       ) : (
         <div className={classic ? "space-y-4" : "space-y-6"}>
           {!classic && (
-            <>
-              <dl className="grid grid-cols-2 border-y border-line-strong lg:grid-cols-4">
-                <Figure label="Crawler visits" value={formatNumber(total)}>
-                  {change ? (
-                    <span className="inline-flex items-center gap-1.5">
-                      <DeltaPill change={change} />
-                      vs previous
-                    </span>
-                  ) : (
-                    rangeLabel
-                  )}
+            // Searchable-style panel: four headline figures over the activity chart.
+            <section className="overflow-hidden rounded-xl border border-line bg-surface" aria-label="Summary">
+              <dl className="grid grid-cols-2 border-b border-line lg:grid-cols-4">
+                <Figure label="Crawler visits" value={formatNumber(total)} delta={change} deltaTitle={`vs the previous ${rangeLabel.replace(/^last /, "")}`}>
+                  Visits from AI crawlers in the {rangeLabel}
                 </Figure>
                 <Figure label="Active bots" value={formatNumber(overview.active_bots)}>
-                  across {plural(platforms.length, "platform")}
+                  Distinct crawlers across {plural(platforms.length, "platform")}
                 </Figure>
                 <Figure label="Top platform" value={overview.top_platform ?? "–"}>
-                  {formatPercent(Number(overview.top_platform_visits), total)} of visits
+                  {formatPercent(Number(overview.top_platform_visits), total)} of all crawler visits
                 </Figure>
                 <Figure label="Top page" value={overview.top_page ?? "–"} mono>
                   {plural(Number(overview.top_page_visits), "visit")} · {plural(Number(overview.pages_crawled), "page")} crawled
                 </Figure>
               </dl>
-              <LiveLog siteId={site.id} initial={recent} tz={f.tz} />
-            </>
+              <div className="px-3 pt-4 pb-3 sm:px-5">
+                <h2 className="mb-2 px-2 text-sm font-medium text-ink sm:px-0">
+                  Crawler activity <span className="font-normal text-ink-3">· by platform</span>
+                </h2>
+                <TimelineChart points={timeline.points} series={timeline.series} bucket={f.bucket} tz={f.tz} />
+              </div>
+            </section>
           )}
           {classic && (
           <div className="grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-line bg-line lg:grid-cols-4">
@@ -100,9 +98,11 @@ export default async function OverviewPage({ params, searchParams }: PageProps<"
           {/* The purpose lens only makes sense across bot types, so it hides when one type is filtered. */}
           {!f.type && <LearnVsCite split={purposeSplit(bots)} previous={purposeSplit(previousBots)} />}
 
-          <Card title="Crawler activity">
-            <TimelineChart points={timeline.points} series={timeline.series} bucket={f.bucket} tz={f.tz} />
-          </Card>
+          {classic && (
+            <Card title="Crawler activity">
+              <TimelineChart points={timeline.points} series={timeline.series} bucket={f.bucket} tz={f.tz} />
+            </Card>
+          )}
 
           <div className="grid gap-4 lg:grid-cols-2">
             <Card title="Visits by platform" action={<ViewAll href={`/dashboard/${site.id}/platforms${q}`} />}>
@@ -119,6 +119,9 @@ export default async function OverviewPage({ params, searchParams }: PageProps<"
               </ol>
             </Card>
           </div>
+
+          {/* The raw feed comes last: summaries first, individual visits after. */}
+          {!classic && <LiveLog siteId={site.id} initial={recent} tz={f.tz} />}
         </div>
       )}
     </>
@@ -137,18 +140,39 @@ function Stat({ label, value, children, mono }: { label: string; value: string; 
   );
 }
 
-/** A headline figure on hairline rules: big tabular numerals, no box. */
-function Figure({ label, value, children, mono }: { label: string; value: string; children: React.ReactNode; mono?: boolean }) {
+/** A headline figure: title, big regular-weight number with the change beside it, and a short description. */
+function Figure({
+  label,
+  value,
+  children,
+  mono,
+  delta,
+  deltaTitle,
+}: {
+  label: string;
+  value: string;
+  children: React.ReactNode;
+  mono?: boolean;
+  delta?: { label: string; direction: "up" | "down" | "flat" } | null;
+  deltaTitle?: string;
+}) {
   return (
-    <div className="min-w-0 py-5 pr-4 even:border-l even:border-line even:pl-5 [&:nth-child(n+3)]:border-t [&:nth-child(n+3)]:border-line lg:border-l lg:border-line lg:pl-6 lg:first:border-l-0 lg:first:pl-0 lg:[&:nth-child(n+3)]:border-t-0">
-      <dt className="text-xs text-ink-3">{label}</dt>
-      <dd
-        className={`mt-2 truncate leading-none ${mono ? "font-mono text-2xl tracking-tight lg:text-[1.75rem]" : "text-3xl font-normal tracking-[-0.04em] tabular-nums lg:text-[2.75rem]"}`}
-        title={value}
-      >
-        {value}
+    <div className="min-w-0 px-5 py-4 even:border-l even:border-line [&:nth-child(n+3)]:border-t [&:nth-child(n+3)]:border-line lg:border-l lg:border-line lg:first:border-l-0 lg:[&:nth-child(n+3)]:border-t-0">
+      <dt className="text-sm font-medium text-ink">{label}</dt>
+      <dd className="mt-2 flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-1">
+        <span
+          className={`leading-none ${mono ? "min-w-0 max-w-full truncate font-mono text-2xl tracking-tight lg:text-[1.75rem]" : "text-3xl font-normal tracking-[-0.04em] whitespace-nowrap tabular-nums lg:text-[2.5rem]"}`}
+          title={value}
+        >
+          {value}
+        </span>
+        {delta && (
+          <span className={`shrink-0 text-sm tabular-nums ${delta.direction === "up" ? "text-good-ink" : "text-ink-3"}`} title={deltaTitle}>
+            {delta.label}
+          </span>
+        )}
       </dd>
-      <dd className="mt-2.5 truncate text-xs text-ink-3">{children}</dd>
+      <dd className="mt-2 text-sm text-ink-3">{children}</dd>
     </div>
   );
 }

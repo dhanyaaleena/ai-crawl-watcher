@@ -34,7 +34,13 @@ export async function checkInstall(siteId: string): Promise<InstallCheck> {
       cache: "no-store",
     });
     const html = (await res.text()).slice(0, 3_000_000);
-    if (html.includes(siteId)) return { status: "found", message: `Tracking code found on https://${site.domain}/` };
+    if (html.includes(siteId)) {
+      // Remember it, so "Install the tracking code" stays connected.
+      const supabase = await createClient();
+      await supabase.from("sites").update({ install_verified_at: new Date().toISOString() }).eq("id", siteId);
+      revalidatePath(`/dashboard/${siteId}`, "layout");
+      return { status: "found", message: `Tracking code found on https://${site.domain}/` };
+    }
     return {
       status: "missing",
       message: `Didn't find the tracking code on https://${site.domain}/ (HTTP ${res.status}). If you just deployed, wait for caches to clear and try again.`,

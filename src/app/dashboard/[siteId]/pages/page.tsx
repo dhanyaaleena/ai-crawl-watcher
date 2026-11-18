@@ -28,15 +28,15 @@ export default async function PagesPage({ params, searchParams }: PageProps<"/da
       ) : (
         <Card flush>
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[760px] table-fixed text-sm">
+            <table className="w-full table-fixed text-sm sm:min-w-[520px]">
               <thead>
                 <tr className="border-b border-line text-left text-xs text-ink-3">
-                  <th className="w-12 py-2 pl-5 font-medium">#</th>
+                  <th className="w-11 py-2 pl-5 font-medium">#</th>
                   <th className="px-3 py-2 font-medium">Page</th>
-                  <th className="w-52 px-3 py-2 font-medium">Visits</th>
-                  <th className="w-16 px-3 py-2 text-right font-medium">Bots</th>
-                  <th className="w-44 px-3 py-2 font-medium">Platforms</th>
-                  <th className="w-40 px-5 py-2 text-right font-medium">Last crawled</th>
+                  <th className="w-20 px-3 py-2 text-right font-medium sm:w-36 sm:text-left xl:w-44">Visits</th>
+                  <th className="hidden w-14 px-3 py-2 text-right font-medium sm:table-cell">Bots</th>
+                  <th className="hidden w-28 px-3 py-2 font-medium lg:table-cell">Platforms</th>
+                  <th className="hidden w-36 py-2 pr-5 pl-3 text-right font-medium md:table-cell">Last crawled</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-line">
@@ -57,24 +57,26 @@ export default async function PagesPage({ params, searchParams }: PageProps<"/da
                     </td>
                     <td className="px-3 py-2.5">
                       <div className="flex items-center gap-2.5">
-                        <span className="w-12 text-right tabular-nums">{formatNumber(p.visits)}</span>
-                        <span className="h-1.5 flex-1 rounded-full bg-surface-2" aria-hidden="true">
+                        <span className="w-full shrink-0 text-right tabular-nums sm:w-11">{formatNumber(p.visits)}</span>
+                        <span className="hidden h-1.5 flex-1 rounded-full bg-surface-2 sm:block" aria-hidden="true">
                           <span className="block h-full rounded-full bg-accent" style={{ width: `${(Number(p.visits) / max) * 100}%` }} />
                         </span>
                       </div>
                     </td>
-                    <td className="px-3 py-2.5 text-right tabular-nums">{formatNumber(p.bots)}</td>
-                    <td className="px-3 py-2.5">
+                    <td className="hidden px-3 py-2.5 text-right tabular-nums sm:table-cell">{formatNumber(p.bots)}</td>
+                    <td className="hidden px-3 py-2.5 lg:table-cell">
                       <span className="flex items-center gap-1" title={p.platforms.join(", ")}>
-                        {[...new Set(p.platforms.map(platformColor))].map((color) => (
-                          <span key={color} className="h-2.5 w-2.5 rounded-sm" style={{ background: color }} />
-                        ))}
-                        <span className="ml-1 truncate text-xs text-ink-3">
-                          {p.platforms.length === 1 ? p.platforms[0] : `${p.platforms.length} platforms`}
+                        <span className="flex min-w-0 items-center gap-1 overflow-hidden">
+                          {[...new Set(p.platforms.map(platformColor))].map((color) => (
+                            <span key={color} className="h-2.5 w-2.5 shrink-0 rounded-sm" style={{ background: color }} />
+                          ))}
+                        </span>
+                        <span className="ml-1 shrink-0 text-xs tabular-nums text-ink-3">
+                          {p.platforms.length === 1 ? "" : p.platforms.length}
                         </span>
                       </span>
                     </td>
-                    <td className="whitespace-nowrap px-5 py-2.5 text-right text-ink-2">{formatDateTime(p.last_seen, f.tz)}</td>
+                    <td className="hidden whitespace-nowrap py-2.5 pr-5 pl-3 text-right text-ink-2 md:table-cell">{formatDateTime(p.last_seen, f.tz)}</td>
                   </tr>
                 ))}
               </tbody>

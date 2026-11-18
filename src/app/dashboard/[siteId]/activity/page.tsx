@@ -1,14 +1,15 @@
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Radio } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
-import { PlatformTag, SampleDataTag, TypeTag } from "@/components/badges";
+import { SampleDataTag } from "@/components/badges";
+import { botTypeLabel, platformColor } from "@/lib/platforms";
 import { Card } from "@/components/card";
 import { EmptyState } from "@/components/empty-state";
 import { PageHeader } from "@/components/page-header";
 import { PathSearch } from "@/components/path-search";
 import { filtersToQuery } from "@/lib/filters";
-import { formatDateTime, formatNumber } from "@/lib/format";
+import { formatDateTime, formatNumber, timeAgo } from "@/lib/format";
 import { ACTIVITY_PAGE_SIZE, getActivity } from "@/lib/queries";
 import { loadSitePage } from "../_data";
 
@@ -39,43 +40,63 @@ export default async function ActivityPage({ params, searchParams }: PageProps<"
         filters={f}
         badge={site.is_sample ? <SampleDataTag /> : undefined}
       />
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-        <Suspense>
-          <PathSearch />
-        </Suspense>
-        <span className="text-sm text-ink-3">{formatNumber(total)} visit{total === 1 ? "" : "s"}</span>
-      </div>
-
+      <Card
+        title="Crawler log"
+        subtitle={`${formatNumber(total)} visit${total === 1 ? "" : "s"}, newest first`}
+        icon={<Radio />}
+        action={
+          <Suspense>
+            <PathSearch />
+          </Suspense>
+        }
+        footer="Each request is normalised to bot, platform, purpose and page. Human visitors are never stored."
+        flush
+      >
       {total === 0 ? (
-        <EmptyState siteId={site.id} filtered={Boolean(f.platform || f.type || q)} />
+        <div className="p-4">
+          <EmptyState siteId={site.id} filtered={Boolean(f.platform || f.type || q)} />
+        </div>
       ) : (
-        <Card flush>
+        <>
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[880px] table-fixed text-sm">
+            <table className="w-full min-w-[640px] table-fixed text-sm">
               <thead>
-                <tr className="border-b border-line text-left text-xs text-ink-3">
-                  <th className="w-36 px-5 py-2 font-medium">Time</th>
-                  <th className="w-40 px-3 py-2 font-medium">Bot</th>
-                  <th className="w-32 px-3 py-2 font-medium">Platform</th>
-                  <th className="w-28 px-3 py-2 font-medium">Purpose</th>
-                  <th className="px-3 py-2 font-medium">Page</th>
-                  <th className="w-[28%] px-5 py-2 font-medium">User agent</th>
+                <tr className="divide-x divide-line border-b border-line text-left text-xs text-ink-3">
+                  <th className="w-48 px-5 py-2.5 font-medium">Bot</th>
+                  <th className="w-32 px-4 py-2.5 font-medium">Purpose</th>
+                  <th className="px-4 py-2.5 font-medium">Page</th>
+                  <th className="w-32 px-4 py-2.5 font-medium">Time</th>
+                  <th className="hidden w-[24%] px-5 py-2.5 font-medium xl:table-cell">User agent</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-line">
                 {rows.map((r) => (
-                  <tr key={r.id} className="align-top">
-                    <td className="whitespace-nowrap px-5 py-2.5 tabular-nums text-ink-2">
-                      <time dateTime={r.timestamp}>{formatDateTime(r.timestamp, f.tz)}</time>
+                  <tr key={r.id} className="divide-x divide-line">
+                    <td className="px-5 py-3">
+                      <span className="block truncate font-medium text-ink" title={r.bot_name}>
+                        {r.bot_name}
+                      </span>
+                      <span className="mt-0.5 flex items-center gap-1.5 text-xs text-ink-3">
+                        <span className="h-2 w-2 shrink-0 rounded-[2px]" style={{ background: platformColor(r.platform) }} aria-hidden="true" />
+                        {r.platform}
+                      </span>
                     </td>
-                    <td className="truncate px-3 py-2.5 font-medium" title={r.bot_name}>{r.bot_name}</td>
-                    <td className="px-3 py-2.5"><PlatformTag platform={r.platform} /></td>
-                    <td className="px-3 py-2.5"><TypeTag type={r.bot_type} /></td>
-                    <td className="px-3 py-2.5">
-                      <span className="block truncate font-mono text-[13px]" title={r.page_url}>{r.page_path}</span>
+                    <td className="px-4 py-3 text-ink-2">{botTypeLabel(r.bot_type)}</td>
+                    <td className="px-4 py-3">
+                      <span className="block font-mono text-[11px] font-medium text-ink-3">GET</span>
+                      <span className="block truncate font-mono text-[13px] text-ink" title={r.page_url}>
+                        {r.page_path}
+                      </span>
                     </td>
-                    <td className="px-5 py-2.5">
-                      <span className="block truncate font-mono text-xs text-ink-3" title={r.user_agent}>{r.user_agent}</span>
+                    <td className="whitespace-nowrap px-4 py-3 text-ink-2">
+                      <time dateTime={r.timestamp} title={formatDateTime(r.timestamp, f.tz)}>
+                        {timeAgo(r.timestamp)}
+                      </time>
+                    </td>
+                    <td className="hidden px-5 py-3 xl:table-cell">
+                      <span className="block truncate font-mono text-xs text-ink-3" title={r.user_agent}>
+                        {r.user_agent}
+                      </span>
                     </td>
                   </tr>
                 ))}
@@ -93,8 +114,9 @@ export default async function ActivityPage({ params, searchParams }: PageProps<"
               </span>
             </nav>
           )}
-        </Card>
+        </>
       )}
+      </Card>
     </>
   );
 }
