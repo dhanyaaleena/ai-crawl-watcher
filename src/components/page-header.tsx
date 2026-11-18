@@ -19,7 +19,7 @@ export function PageHeader({
 }) {
   const q = filters ? filtersToQuery(filters).replace(/^\?/, "&") : "";
   return (
-    <header className="mb-6 space-y-4">
+    <header className="mb-6 space-y-4" data-page-header>
       <div>
         <div className="flex flex-wrap items-center gap-2.5">
           <h1 className="text-2xl font-normal tracking-[-0.035em]">{title}</h1>

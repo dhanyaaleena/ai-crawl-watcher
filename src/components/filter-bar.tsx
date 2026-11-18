@@ -2,7 +2,7 @@
 
 import { X } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useTransition } from "react";
+import { useEffect, useOptimistic, useTransition } from "react";
 import { BOT_TYPES, PLATFORMS } from "../../supabase/functions/_shared/bots";
 import { RANGES } from "@/lib/filters";
 
@@ -17,17 +17,33 @@ export function FilterBar() {
   const sp = useSearchParams();
   const [pending, startTransition] = useTransition();
 
-  const range = sp.get("range") ?? "7d";
-  const platform = sp.get("platform") ?? "";
-  const type = sp.get("type") ?? "";
+  // Show the clicked value immediately; the URL (and data) catch up when the server answers.
+  const [shown, setShown] = useOptimistic(
+    { range: sp.get("range") ?? "7d", platform: sp.get("platform") ?? "", type: sp.get("type") ?? "" },
+    (cur, patch: Partial<{ range: string; platform: string; type: string }>) => ({ ...cur, ...patch }),
+  );
+  const { range, platform, type } = shown;
 
-  function update(key: string, value: string) {
+  // Lets CSS dim the page and show a progress bar while new data loads.
+  useEffect(() => {
+    const el = document.documentElement;
+    if (pending) el.dataset.navPending = "";
+    else delete el.dataset.navPending;
+    return () => {
+      delete el.dataset.navPending;
+    };
+  }, [pending]);
+
+  function update(key: "range" | "platform" | "type", value: string) {
     const next = new URLSearchParams(sp);
     if (!value || (key === "range" && value === "7d")) next.delete(key);
     else next.set(key, value);
     next.delete("page");
     const q = next.toString();
-    startTransition(() => router.replace(q ? `${pathname}?${q}` : pathname, { scroll: false }));
+    startTransition(() => {
+      setShown({ [key]: value || (key === "range" ? "7d" : "") });
+      router.replace(q ? `${pathname}?${q}` : pathname, { scroll: false });
+    });
   }
 
   return (
@@ -73,14 +89,21 @@ export function FilterBar() {
             next.delete("type");
             next.delete("page");
             const q = next.toString();
-            startTransition(() => router.replace(q ? `${pathname}?${q}` : pathname, { scroll: false }));
+            startTransition(() => {
+              setShown({ platform: "", type: "" });
+              router.replace(q ? `${pathname}?${q}` : pathname, { scroll: false });
+            });
           }}
           className="inline-flex h-8 items-center gap-1 rounded-md px-2 text-sm text-ink-2 hover:text-ink"
         >
           <X className="h-3.5 w-3.5" /> Clear
         </button>
       )}
-      {pending && <span className="text-xs text-ink-3">Updating…</span>}
+      {pending && (
+        <span className="text-xs text-ink-3" role="status">
+          Updating…
+        </span>
+      )}
     </div>
   );
 }

@@ -100,9 +100,35 @@ body {
   opacity: 0.6;
 }
 
+/* Keyboard focus: a thin brand-orange ring, like Searchable's (the ink accent made it a heavy black box). */
 :focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid color-mix(in oklab, var(--brand) 70%, transparent);
   outline-offset: 2px;
+}
+
+/* While a filter change loads: dim the page below the header and run a thin bar along the top. */
+main header[data-page-header] ~ * {
+  transition: opacity 120ms ease;
+}
+html[data-nav-pending] main header[data-page-header] ~ * {
+  opacity: 0.55;
+}
+html[data-nav-pending] body::before {
+  content: "";
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: 50;
+  height: 2px;
+  background: var(--brand);
+  transform-origin: left;
+  animation: nav-progress 1.2s ease-out forwards;
+}
+@keyframes nav-progress {
+  from { transform: scaleX(0.05); }
+  to { transform: scaleX(0.85); }
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-nav-pending] body::before { animation: none; transform: scaleX(0.6); }
 }
 
 /* Crawl log: a new visit slides in and glows briefly (glow only with reduced motion). */
