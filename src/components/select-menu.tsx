@@ -164,7 +164,11 @@ export function SelectMenu({
 
       {open && (
         <div
-          className={`absolute left-0 z-40 mt-1.5 w-max min-w-full max-w-[min(20rem,calc(100vw-2rem))] overflow-hidden rounded-xl border border-line bg-surface shadow-[0_12px_32px_rgb(0_0_0/0.10),0_2px_6px_rgb(0_0_0/0.06)]`}
+          // Full-width menus (the sidebar site picker) match the trigger exactly: a wider panel would make
+          // the scrolling sidebar scroll sideways. Inline menus may grow to fit their longest option.
+          className={`absolute left-0 z-40 mt-1.5 overflow-hidden rounded-xl border border-line bg-surface shadow-[0_12px_32px_rgb(0_0_0/0.10),0_2px_6px_rgb(0_0_0/0.06)] ${
+            fullWidth ? "w-full" : "w-max min-w-full max-w-[min(20rem,calc(100vw-2rem))]"
+          }`}
         >
           {search && (
             <div className="flex items-center gap-2 border-b border-line px-3">
@@ -215,7 +219,9 @@ export function SelectMenu({
                     } ${isSelected ? "font-medium text-ink" : "text-ink-2"}`}
                   >
                     {o.leading}
-                    <span className="min-w-0 flex-1 truncate">{o.label}</span>
+                    <span className="min-w-0 flex-1 truncate" title={o.label}>
+                      {o.label}
+                    </span>
                     {isSelected && <Check className="h-4 w-4 shrink-0 text-ink-2" aria-hidden="true" />}
                   </li>
                 );

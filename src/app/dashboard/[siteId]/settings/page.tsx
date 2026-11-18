@@ -1,4 +1,4 @@
-import { CircleCheck, Code2, Download } from "lucide-react";
+import { CircleCheck, Code2, Download, Globe } from "lucide-react";
 import type { Metadata } from "next";
 import { SampleDataTag } from "@/components/badges";
 import { Card } from "@/components/card";
@@ -33,7 +33,7 @@ export default async function SettingsPage({ params, searchParams }: PageProps<"
       )}
 
       <div className="space-y-4">
-        <div className="grid gap-4 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]">
           <Card
             title="Setup"
             subtitle="Three steps"
@@ -49,6 +49,57 @@ export default async function SettingsPage({ params, searchParams }: PageProps<"
             />
           </Card>
 
+
+
+        <div className="flex flex-col gap-4">
+        <Card title="Site" subtitle={site.domain} icon={<Globe />}>
+          {/* Label above value: this column is narrow on laptops, so side-by-side pairs would squeeze the values. */}
+          <dl className="space-y-3 text-sm">
+            <div>
+              <dt className="text-xs text-ink-3">Domain</dt>
+              <dd className="mt-0.5">
+                {site.domain} <span className="text-ink-3">and its subdomains</span>
+              </dd>
+            </div>
+            <div>
+              <dt className="text-xs text-ink-3">Site ID</dt>
+              <dd className="mt-0.5 flex min-w-0 items-center justify-between gap-2">
+                <code className="min-w-0 break-all font-mono text-[13px]">{site.id}</code>
+                <CopyButton text={site.id} />
+              </dd>
+            </div>
+            <div>
+              <dt className="text-xs text-ink-3">Added</dt>
+              <dd className="mt-0.5">{formatDateTime(site.created_at, f.tz)}</dd>
+            </div>
+            <div>
+              <dt className="text-xs text-ink-3">Privacy</dt>
+              <dd className="mt-0.5 text-ink-2">
+                IP addresses are truncated and hashed before storage. Query strings and fragments are dropped from page URLs. Human
+                visitors are never recorded.
+              </dd>
+            </div>
+          </dl>
+          <div className="mt-5 flex flex-col items-start gap-3 border-t border-line pt-4">
+            <p className="text-sm text-ink-2">Remove this site and permanently delete its crawler data.</p>
+            <DeleteSiteButton siteId={site.id} domain={site.domain} />
+          </div>
+        </Card>
+        <Card title="Export" className="flex-1">
+          <div className="flex flex-col items-start gap-3">
+            <p className="text-sm text-ink-2">
+              Every recorded crawler visit for {site.domain} as CSV: time, URL, bot, platform, type, user agent, path and hashed IP.
+            </p>
+            <a
+              href={`/api/export?site=${site.id}&all=1`}
+              className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-md btn-primary px-3 py-1.5 text-sm font-medium"
+            >
+              <Download className="h-4 w-4" /> Download all data
+            </a>
+          </div>
+        </Card>
+        </div>
+        </div>
 
         <Card title="Tracking code" subtitle="Copy into your site" icon={<Code2 />}>
           <ol className="space-y-6">
@@ -77,41 +128,8 @@ export default async function SettingsPage({ params, searchParams }: PageProps<"
             </div>
           </details>
         </Card>
-        </div>
 
-        <Card title="Export">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-sm text-ink-2">
-              Every recorded crawler visit for {site.domain} as CSV: time, URL, bot, platform, type, user agent, path and hashed IP.
-            </p>
-            <a
-              href={`/api/export?site=${site.id}&all=1`}
-              className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-md btn-primary px-3 py-1.5 text-sm font-medium"
-            >
-              <Download className="h-4 w-4" /> Download all data
-            </a>
-          </div>
-        </Card>
 
-        <Card title="Site">
-          <dl className="grid gap-x-6 gap-y-3 text-sm sm:grid-cols-[8rem_1fr]">
-            <dt className="text-ink-3">Domain</dt>
-            <dd>{site.domain} <span className="text-ink-3">and its subdomains</span></dd>
-            <dt className="text-ink-3">Site ID</dt>
-            <dd className="flex items-center gap-2"><code className="font-mono text-[13px]">{site.id}</code><CopyButton text={site.id} /></dd>
-            <dt className="text-ink-3">Added</dt>
-            <dd>{formatDateTime(site.created_at, f.tz)}</dd>
-            <dt className="text-ink-3">Privacy</dt>
-            <dd className="text-ink-2">
-              IP addresses are truncated and hashed before storage. Query strings and fragments are dropped from page URLs. Human
-              visitors are never recorded.
-            </dd>
-          </dl>
-          <div className="mt-6 flex flex-col gap-3 border-t border-line pt-5 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-sm text-ink-2">Remove this site and permanently delete its crawler data.</p>
-            <DeleteSiteButton siteId={site.id} domain={site.domain} />
-          </div>
-        </Card>
       </div>
     </>
   );
