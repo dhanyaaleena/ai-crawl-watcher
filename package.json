@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "next typegen && tsc --noEmit",
     "db:start": "supabase start",
     "db:reset": "supabase db reset",
     "functions:serve": "supabase functions serve track --no-verify-jwt",
