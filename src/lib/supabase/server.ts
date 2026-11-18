@@ -19,9 +19,19 @@ export async function createClient() {
   });
 }
 
-/** The signed-in user for this request (deduplicated across layouts and pages). */
-export const getUser = cache(async () => {
+/**
+ * The signed-in user for this request (deduplicated across layouts and pages).
+ *
+ * `getClaims()` verifies the session token's signature locally against the
+ * project's public ES256 key (fetched once, cached for 10 minutes), instead of
+ * `getUser()`, which asks Supabase Auth over the network. The proxy already
+ * makes that network check on every request (it also catches signed-out
+ * sessions), and the database verifies the token again for every query, so a
+ * second network check here only added a round trip per click.
+ */
+export const getUser = cache(async (): Promise<{ id: string; email?: string } | null> => {
   const supabase = await createClient();
-  const { data } = await supabase.auth.getUser();
-  return data.user;
+  const { data, error } = await supabase.auth.getClaims();
+  if (error || !data?.claims.sub) return null;
+  return { id: data.claims.sub, email: data.claims.email };
 });

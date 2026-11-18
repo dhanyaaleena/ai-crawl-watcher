@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { TRACK_ENDPOINT } from "@/lib/env";
 import { getSite } from "@/lib/queries";
+import { fetchPublicPage } from "@/lib/safe-fetch";
 import { TEST_BOT_UA, TEST_PATH } from "@/lib/test-visit";
 import { createClient } from "@/lib/supabase/server";
 
@@ -27,13 +28,11 @@ export async function checkInstall(siteId: string): Promise<InstallCheck> {
     return { status: "error", message: `Can't check ${site.domain} from here. Open your page source and look for the snippet.` };
   }
   try {
-    const res = await fetch(`https://${site.domain}/`, {
-      redirect: "follow",
-      signal: AbortSignal.timeout(8000),
+    // Every redirect hop and every resolved address is checked, so a redirect or DNS record can't aim this at an internal host.
+    const res = await fetchPublicPage(`https://${site.domain}/`, {
       headers: { "user-agent": "Mozilla/5.0 (compatible; Crawlwatch-InstallCheck/1.0)", accept: "text/html" },
-      cache: "no-store",
     });
-    const html = (await res.text()).slice(0, 3_000_000);
+    const html = res.body;
     if (html.includes(siteId)) {
       // Remember it, so "Install the tracking code" stays connected.
       const supabase = await createClient();

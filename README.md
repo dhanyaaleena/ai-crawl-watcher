@@ -54,7 +54,7 @@ Pages are `weight:path`, comma-separated. `visits:send` only needs the endpoint 
 ### Checks
 
 ```bash
-npm test          # 48 unit tests: classifier, URL/IP handling, CSV, time ranges, snippet size, learning vs citing
+npm test          # 76 unit tests: classifier, URL/IP handling, CSV, time ranges, snippet size, training vs retrieval, SSRF guard
 ```
 
 ```bash
@@ -64,6 +64,8 @@ npm run smoke     # end to end against the running edge function + RLS isolation
 ```bash
 npm run typecheck && npm run lint && npm run build
 ```
+
+GitHub Actions (`.github/workflows/ci.yml`) runs all of these on every push and pull request: lint, types, unit tests and a production build in one job; in a second job, a local Supabase stack, the demo seed and `npm run smoke`, so a broken row level security policy fails the build.
 
 ## What's in the box
 
@@ -106,13 +108,15 @@ Settings shows the code with the site id filled in:
 ## Decisions worth knowing
 
 - **Only bots are stored.** Ordinary browsers get the no-op script and no row is written, which keeps volume (and privacy exposure) low. Unknown automated clients are kept, per FR-2.4.
-- **Domain check.** An event is accepted only if the page host is the site's domain or a subdomain, so a copied site id can't be used to fill someone else's dashboard from another site.
+- **Domain check.** An event is accepted only if the page host is the site's domain or a subdomain, so a snippet copied onto another website is rejected. It stops accidental reuse, not deliberate forgery: the Site ID is public, so anyone can send a request with a matching URL. A per-site secret for server forwarding plus rate limits is the planned fix.
 - **Privacy.** IPs are truncated (IPv4 /24, IPv6 /48) and then SHA-256 hashed with a secret salt and the site id, so the hash can't be reversed even if the salt leaks and can't be joined across sites. Query strings and fragments are dropped from URLs, since they often carry tokens.
 - **Aggregation in Postgres.** Charts call SQL functions instead of pulling raw rows to the browser; indexes cover `(site_id, timestamp)`, `(site_id, platform, timestamp)` and `(site_id, page_path)`.
 - **Time zones.** The browser's zone is stored in a cookie; day buckets start at local midnight and hour buckets at local hours (tested for DST and half-hour offsets such as India).
 - **CSV safety.** Cells starting with `= + - @` are prefixed with `'` because user agents are attacker-controlled (spreadsheet formula injection). Column order follows the PRD appendix, then `page_path` and `ip_hash`.
 - **Colours** follow the platform, not its rank. The seven most common platforms have fixed, colour-blind-checked slots; the long tail shares one neutral "Other" in stacked charts, and every bar is labelled directly.
 - **Node 24.** Node 20 is past end of life and current supabase-js needs Node 22+; 24 is used for its longer support window. The edge function runs on Supabase's Deno runtime and doesn't depend on this.
+- **Install check is SSRF-safe.** "Check installation" fetches the customer's homepage from our server. `src/lib/safe-fetch.ts` follows redirects by hand (at most 3) and vets the address inside the socket's DNS lookup, so neither a redirect nor a DNS record can point it at a private, loopback or cloud-metadata address.
+- **One auth round trip per click.** `proxy.ts` asks Supabase Auth to validate the session (it also catches sessions signed out elsewhere); the dashboard layout then verifies the token locally with `getClaims()` against the project's public signing key, instead of a second network call.
 - **Next.js 16** scaffold enabled Cache Components; it's switched off because every dashboard view is per-user and request-time.
 
 ## Known limitations
@@ -122,6 +126,19 @@ Settings shows the code with the site id filled in:
 - **User agents can be spoofed.** Checking visits against the IP ranges AI companies publish was built and tested, then removed: real claude.ai (Claude-User) and Gemini fetches came from addresses outside those lists, so the check would have mislabelled genuine visits. It works for the big crawlers (GPTBot, ClaudeBot, PerplexityBot) and could return if the lists become complete.
 - **No rate limiting** on the public endpoint beyond the domain check; add a gateway rule or per-site quotas for production.
 - Exact `count` on the activity log is fine at demo scale; switch to `estimated` for very large tables.
+
+## Capacity and upgrade path
+
+This is the PRD's mitigation for high-volume sites. Plan limits are from [Supabase pricing](https://supabase.com/pricing) (check the live page); event size was measured locally at about 1.3 KB per stored visit, indexes included.
+
+| | Free | Pro ($25/month) |
+| --- | --- | --- |
+| Edge Function calls | 500k / month | 2M included, then $2 per million |
+| Database | 500 MB ≈ 380k stored crawler visits | 8 GB ≈ 6M visits, disk grows automatically |
+
+- **Function calls are the first limit.** Every page view that loads the `<head>` snippet calls the endpoint, humans included (they are answered, not stored). On the free plan that is roughly 16k page views a day. The fix before upgrading: a broad user-agent check in the snippet so ordinary browsers never call the endpoint, with the server keeping the final say on classification.
+- **Storage is next.** Past a few million visits per site: daily rollup tables (refreshed with `pg_cron`, today still read live), monthly partitions of `crawler_events`, and a retention window.
+- **Upgrade order:** add the snippet filter → Supabase Pro → rollups and partitions → a read replica for the dashboard if reads compete with ingest.
 
 ## Deploying
 
