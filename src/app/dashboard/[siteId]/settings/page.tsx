@@ -33,24 +33,7 @@ export default async function SettingsPage({ params, searchParams }: PageProps<"
       )}
 
       <div className="space-y-4">
-        <div className="grid gap-4 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]">
-          <Card
-            title="Setup"
-            subtitle="Three steps"
-            icon={<CircleCheck />}
-            footer="Takes about two minutes. This card updates by itself when the first visit arrives."
-          >
-            <SetupProgress
-              siteId={site.id}
-              domain={site.domain}
-              installVerifiedAt={site.install_verified_at}
-              last={last && { id: last.id, timestamp: last.timestamp, bot_name: last.bot_name, page_path: last.page_path }}
-              lastTest={lastTest && { id: lastTest.id, timestamp: lastTest.timestamp, bot_name: lastTest.bot_name, page_path: lastTest.page_path }}
-            />
-          </Card>
-
-
-
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
         <div className="flex flex-col gap-4">
         <Card title="Site" subtitle={site.domain} icon={<Globe />}>
           {/* Label above value: this column is narrow on laptops, so side-by-side pairs would squeeze the values. */}
@@ -99,6 +82,20 @@ export default async function SettingsPage({ params, searchParams }: PageProps<"
           </div>
         </Card>
         </div>
+          <Card
+            title="Setup"
+            subtitle="Three steps"
+            icon={<CircleCheck />}
+            footer="Takes about two minutes. This card updates by itself when the first visit arrives."
+          >
+            <SetupProgress
+              siteId={site.id}
+              domain={site.domain}
+              installVerifiedAt={site.install_verified_at}
+              last={last && { id: last.id, timestamp: last.timestamp, bot_name: last.bot_name, page_path: last.page_path }}
+              lastTest={lastTest && { id: lastTest.id, timestamp: lastTest.timestamp, bot_name: lastTest.bot_name, page_path: lastTest.page_path }}
+            />
+          </Card>
         </div>
 
         <Card title="Tracking code" subtitle="Copy into your site" icon={<Code2 />}>

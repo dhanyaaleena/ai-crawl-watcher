@@ -21,6 +21,8 @@ export default async function ActivityPage({ params, searchParams }: PageProps<"
   const page = Math.max(1, Number.parseInt(String(sp.page ?? "1"), 10) || 1);
   const { rows, total } = await getActivity(site.id, f, { page, q });
   const pages = Math.max(1, Math.ceil(total / ACTIVITY_PAGE_SIZE));
+  const first = rows.length ? (page - 1) * ACTIVITY_PAGE_SIZE + 1 : 0;
+  const last = first ? first + rows.length - 1 : 0;
 
   const pageHref = (n: number) => {
     const base = filtersToQuery(f);
@@ -64,9 +66,10 @@ export default async function ActivityPage({ params, searchParams }: PageProps<"
                 <tr className="divide-x divide-line border-b border-line text-left text-xs text-ink-3">
                   <th className="w-48 px-5 py-2.5 font-medium">Bot</th>
                   <th className="w-32 px-4 py-2.5 font-medium">Purpose</th>
-                  <th className="px-4 py-2.5 font-medium">Page</th>
-                  <th className="w-32 px-4 py-2.5 font-medium">Time</th>
-                  <th className="hidden w-[24%] px-5 py-2.5 font-medium xl:table-cell">User agent</th>
+                  {/* Paths are short, so on wide screens Page gets a fixed share and the long user agent takes the rest. */}
+                  <th className="px-4 py-2.5 font-medium xl:w-[22%]">Page</th>
+                  <th className="w-28 px-4 py-2.5 font-medium">Time</th>
+                  <th className="hidden px-5 py-2.5 font-medium xl:table-cell">User agent</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-line">
@@ -103,17 +106,26 @@ export default async function ActivityPage({ params, searchParams }: PageProps<"
               </tbody>
             </table>
           </div>
-          {pages > 1 && (
-            <nav aria-label="Pagination" className="flex items-center justify-between border-t border-line px-5 py-3 text-sm">
-              <span className="text-ink-3">
-                Page {page} of {formatNumber(pages)}
+          <nav aria-label="Pagination" className="flex flex-wrap items-center justify-between gap-3 border-t border-line px-5 py-3 text-sm">
+            <span className="text-ink-3">
+              Showing{" "}
+              <span className="font-medium text-ink-2">
+                {formatNumber(first)}–{formatNumber(last)}
+              </span>{" "}
+              of {formatNumber(total)}
+              <span className="hidden sm:inline">
+                {" "}
+                · {ACTIVITY_PAGE_SIZE} per page
+                {pages > 1 && <> · page {formatNumber(page)} of {formatNumber(pages)}</>}
               </span>
+            </span>
+            {pages > 1 && (
               <span className="flex gap-2">
                 <PageLink href={page > 1 ? pageHref(page - 1) : null} label="Newer"><ChevronLeft className="h-4 w-4" /></PageLink>
                 <PageLink href={page < pages ? pageHref(page + 1) : null} label="Older"><ChevronRight className="h-4 w-4" /></PageLink>
               </span>
-            </nav>
-          )}
+            )}
+          </nav>
         </>
       )}
       </Card>
