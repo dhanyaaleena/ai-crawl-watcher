@@ -56,7 +56,7 @@
   <text class="lab" x="578" y="222">only writer</text>
 
   <!-- Vercel -->
-  <text class="glabel" x="634" y="318">VERCEL · MUMBAI</text>
+  <text class="glabel" x="634" y="318">VERCEL</text>
   <rect class="grp" x="634" y="328" width="260" height="100" rx="10"/>
   <rect class="box" x="654" y="346" width="220" height="64" rx="8"/>
   <text class="t" x="670" y="373">Next.js dashboard</text>
