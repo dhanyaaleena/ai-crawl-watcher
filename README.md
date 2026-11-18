@@ -2,7 +2,9 @@
 
 See which AI platforms crawl your website (OpenAI, Anthropic, Google, Perplexity, Meta and more), which pages they read, and how often.
 
-**[Live dashboard](https://ai-crawl-watcher.vercel.app)** · **[Test site with edge forwarding](https://legendary-sawine-97365c.netlify.app)** · **[Work log](#work-log)**
+**[Live dashboard](https://ai-crawl-watcher.vercel.app)** · **[Test site with edge forwarding](https://legendary-sawine-97365c.netlify.app)**
+
+[Features](#features) · [Architecture](#architecture) · [Run locally](#run-locally) · [Tests](#tests) · [Deploy](#deploy) · [Limits and next steps](#limits-and-next-steps) · [Work log](#work-log)
 
 **Stack:** Next.js 16 on Vercel · Supabase (Postgres, Auth, Edge Functions) · TypeScript · Tailwind
 
