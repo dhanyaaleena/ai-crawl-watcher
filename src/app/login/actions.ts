@@ -26,7 +26,13 @@ export async function signIn(_: AuthState, form: FormData): Promise<AuthState> {
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) return { error: error.message };
-  redirect(safeNext(form.get("next")));
+  const next = safeNext(form.get("next"));
+  if (next !== "/dashboard") redirect(next);
+  // Go straight to the first site. Redirecting to /dashboard would render a page whose only job is
+  // to redirect again, costing the browser a second full round trip before anything shows.
+  // Same ordering as getSites(); this client already holds the new session.
+  const { data } = await supabase.from("sites").select("id").order("created_at").limit(1);
+  redirect(data?.[0] ? `/dashboard/${data[0].id}` : "/dashboard/new");
 }
 
 export async function signUp(_: AuthState, form: FormData): Promise<AuthState> {
@@ -37,5 +43,6 @@ export async function signUp(_: AuthState, form: FormData): Promise<AuthState> {
   if (error) return { error: error.message };
   // With email confirmation on, Supabase returns no session until the link is clicked.
   if (!data.session) return { message: "Check your inbox to confirm your email, then sign in." };
-  redirect("/dashboard");
+  redirect("/dashboard/new"); // a new account has no sites yet
+
 }
