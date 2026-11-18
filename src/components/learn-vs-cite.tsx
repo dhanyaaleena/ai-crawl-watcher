@@ -1,10 +1,11 @@
 import { ArrowDownRight, ArrowUpRight } from "lucide-react";
+import { InfoTip } from "@/components/info-tip";
 import { changeVsPrevious, formatNumber, formatPercent, plural } from "@/lib/format";
 import type { PurposeSplit } from "@/lib/purpose";
 
 /**
  * Training vs retrieval: training crawlers vs search and assistant bots.
- * Every value is labelled directly.
+ * Numbers stay on screen; explanations live behind ⓘ tooltips.
  */
 export function LearnVsCite({ split, previous }: { split: PurposeSplit; previous: PurposeSplit }) {
   const known = split.learning.visits + split.citing.visits;
@@ -14,14 +15,23 @@ export function LearnVsCite({ split, previous }: { split: PurposeSplit; previous
   return (
     <section className="rounded-xl border border-line bg-surface" aria-labelledby="lvc-title">
       <div className="px-5 pt-4">
-        <h2 id="lvc-title" className="text-sm font-medium text-ink">
-          Training vs retrieval
-        </h2>
-        {split.takeaway && <p className="mt-1 text-sm text-ink-2">{split.takeaway}</p>}
+        <div className="flex items-center gap-1.5">
+          <h2 id="lvc-title" className="text-sm font-medium text-ink">
+            Training vs retrieval
+          </h2>
+          <InfoTip label="About training vs retrieval">
+            {split.takeaway && <span className="block text-ink">{split.takeaway}</span>}
+            <span className="mt-1.5 block">
+              Training crawlers collect content for AI models. Retrieval bots fetch pages to answer people&apos;s questions and may
+              link back to you.
+            </span>
+            {split.unknown > 0 && <span className="mt-1.5 block text-ink-3">Excludes {plural(split.unknown, "visit")} from unclassified bots.</span>}
+          </InfoTip>
+        </div>
       </div>
 
       {/* Split bar */}
-      <div className="px-5 pt-4" aria-hidden="true">
+      <div className="px-5 pt-3" role="img" aria-label={split.takeaway ?? "No classified AI visits"}>
         <div className="flex h-2.5 gap-0.5 overflow-hidden rounded-full bg-surface-2">
           {split.learning.visits > 0 && <span className="h-full rounded-l-full bg-learn" style={{ width: `${split.learning.share * 100}%` }} />}
           {split.citing.visits > 0 && <span className="h-full rounded-r-full bg-cite" style={{ width: `${split.citing.share * 100}%` }} />}
@@ -35,7 +45,7 @@ export function LearnVsCite({ split, previous }: { split: PurposeSplit; previous
           visits={split.learning.visits}
           share={formatPercent(split.learning.visits, known)}
           previous={previous.learning.visits}
-          explain="Crawlers collecting content for AI model training."
+          explain="Crawlers collecting content for AI model training. They don't send visitors."
           bots={split.learning.topBots}
         />
         <Side
@@ -44,7 +54,7 @@ export function LearnVsCite({ split, previous }: { split: PurposeSplit; previous
           visits={split.citing.visits}
           share={formatPercent(split.citing.visits, known)}
           previous={previous.citing.visits}
-          explain="Search indexing and on-demand fetches used to answer queries, which may link to your pages."
+          explain="Search indexing and on-demand fetches used to answer people's questions. These can link back to your pages."
           detail={`${formatNumber(split.citing.search)} search · ${formatNumber(split.citing.assistant)} assistant`}
           bots={split.citing.topBots}
         />
@@ -82,11 +92,6 @@ export function LearnVsCite({ split, previous }: { split: PurposeSplit; previous
               </li>
             ))}
           </ul>
-          {split.unknown > 0 && (
-            <p className="mt-3 text-xs text-ink-3">
-              Excludes {plural(split.unknown, "visit")} from unclassified bots.
-            </p>
-          )}
         </div>
       )}
     </section>
@@ -118,26 +123,23 @@ function Side({
       <div className="flex items-center gap-2 text-xs text-ink-3">
         <span className={`h-2.5 w-2.5 rounded-sm ${tone === "learn" ? "bg-learn" : "bg-cite"}`} aria-hidden="true" />
         {label}
+        <InfoTip label={`About ${label.toLowerCase()}`} align={tone === "cite" ? "right" : "left"}>
+          <span className="block text-ink">{explain}</span>
+          {detail && <span className="mt-1.5 block">{detail}</span>}
+          {bots.length > 0 && <span className="mt-1.5 block">Top bots: {bots.slice(0, 5).join(", ")}{bots.length > 5 && ` +${bots.length - 5} more`}</span>}
+        </InfoTip>
       </div>
-      <div className="mt-1 flex flex-wrap items-baseline gap-x-2">
+      <div className="mt-1 flex flex-wrap items-baseline gap-x-2.5">
         <span className="text-2xl font-semibold tracking-tight tabular-nums">{formatNumber(visits)}</span>
-        <span className="text-sm text-ink-3">{share} of AI visits</span>
+        <span className="text-sm text-ink-3">{share}</span>
         {change && (
-          <span className="inline-flex items-center gap-0.5 text-xs text-ink-2">
+          <span className="inline-flex items-center gap-0.5 text-xs text-ink-3" title="Compared with the previous period of the same length">
             {change.direction === "up" && <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />}
             {change.direction === "down" && <ArrowDownRight className="h-3.5 w-3.5" aria-hidden="true" />}
             {change.label} vs previous
           </span>
         )}
       </div>
-      <p className="mt-1.5 text-sm text-ink-2">{explain}</p>
-      {detail && <p className="mt-1 text-xs text-ink-3">{detail}</p>}
-      {bots.length > 0 && (
-        <p className="mt-2 truncate text-xs text-ink-3" title={bots.join(", ")}>
-          Top: {bots.slice(0, 3).join(", ")}
-          {bots.length > 3 && ` +${bots.length - 3} more`}
-        </p>
-      )}
     </div>
   );
 }
