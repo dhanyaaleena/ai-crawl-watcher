@@ -78,6 +78,8 @@ npm test && npm run smoke
 
 76 unit tests cover classification, URL and IP handling, CSV, time zones and the SSRF guard. The smoke test sends real requests through the tracking function and checks that another user, or an anonymous client, can read nothing. CI runs lint, types, both test suites and a build on every push.
 
+Checked on production: GPTBot, ClaudeBot, PerplexityBot and Google-Extended visits sent through the live endpoint were stored with the right platform and type; "Download all data" returned exactly the rows in the database; a fresh install recorded its first visit in 14 seconds. Real ChatGPT, Claude and Gemini fetches of the test site were captured through its edge forwarding.
+
 ## Deploy
 
 1. **Supabase:** `supabase link`, `supabase db push`, set the `IP_HASH_SALT` secret, then `supabase functions deploy track --no-verify-jwt`.
