@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 910 470" width="910" height="470" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif">
+  <title>Crawlwatch architecture</title>
+  <desc>An AI crawler loads a page on a customer's website. The snippet, pixel or the site's middleware reports the visit to the Supabase Edge Function "track", which classifies the user agent, checks the domain, hashes the IP and inserts a row into Postgres. It is the only writer. The site owner uses the Next.js dashboard on Vercel, which reads Postgres as the signed-in user under row level security. Supabase and Vercel both run in Mumbai.</desc>
+  <defs>
+    <marker id="hot" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" fill="#e04600"/></marker>
+    <marker id="cool" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" fill="#57534e"/></marker>
+    <style>
+      .grp { fill: none; stroke: #c8c5bf; stroke-dasharray: 5 5; }
+      .glabel { fill: #69635d; font-size: 11.5px; font-weight: 600; letter-spacing: 0.06em; }
+      .box { fill: #f6f5f3; stroke: #d4d1cc; }
+      .key { fill: #fff4ee; stroke: #e04600; }
+      .t { fill: #1d1b1b; font-size: 14.5px; font-weight: 600; }
+      .s { fill: #57534e; font-size: 12.5px; }
+      .lab { fill: #57534e; font-size: 11.5px; font-weight: 500; }
+      .hot { stroke: #e04600; stroke-width: 2; fill: none; }
+      .cool { stroke: #57534e; stroke-width: 1.6; fill: none; }
+    </style>
+  </defs>
+
+  <rect width="910" height="470" fill="#ffffff"/>
+
+  <!-- Customer website -->
+  <text class="glabel" x="16" y="30">CUSTOMER WEBSITE</text>
+  <rect class="grp" x="16" y="40" width="240" height="250" rx="10"/>
+  <rect class="box" x="36" y="64" width="200" height="74" rx="8"/>
+  <text class="t" x="52" y="92">AI crawler</text>
+  <text class="s" x="52" y="112">GPTBot, ClaudeBot,</text>
+  <text class="s" x="52" y="128">ChatGPT-User, Gemini…</text>
+  <path class="hot" d="M136 140 V194" marker-end="url(#hot)"/>
+  <text class="lab" x="146" y="171">loads a page</text>
+  <rect class="box" x="36" y="196" width="200" height="74" rx="8"/>
+  <text class="t" x="52" y="222">Your website</text>
+  <text class="s" x="52" y="242">snippet · pixel ·</text>
+  <text class="s" x="52" y="258">middleware forward</text>
+
+  <!-- Supabase -->
+  <text class="glabel" x="330" y="30">SUPABASE · MUMBAI</text>
+  <rect class="grp" x="330" y="40" width="564" height="250" rx="10"/>
+  <rect class="key" x="350" y="180" width="220" height="96" rx="8"/>
+  <text class="t" x="366" y="206">Edge Function: track</text>
+  <text class="s" x="366" y="228">classify user agent</text>
+  <text class="s" x="366" y="244">check page domain</text>
+  <text class="s" x="366" y="260">truncate + hash IP</text>
+  <rect class="box" x="654" y="180" width="220" height="96" rx="8"/>
+  <text class="t" x="670" y="206">Postgres</text>
+  <text class="s" x="670" y="228">sites · crawler_events</text>
+  <text class="s" x="670" y="244">row level security</text>
+  <text class="s" x="670" y="260">4 SQL aggregate functions</text>
+  <rect class="box" x="654" y="64" width="220" height="62" rx="8"/>
+  <text class="t" x="670" y="90">Auth</text>
+  <text class="s" x="670" y="110">dashboard sign-in</text>
+
+  <path class="hot" d="M238 230 H348" marker-end="url(#hot)"/>
+  <text class="lab" x="264" y="222">site ID + URL</text>
+  <path class="hot" d="M572 230 H652" marker-end="url(#hot)"/>
+  <text class="lab" x="578" y="222">only writer</text>
+
+  <!-- Vercel -->
+  <text class="glabel" x="634" y="318">VERCEL · MUMBAI</text>
+  <rect class="grp" x="634" y="328" width="260" height="100" rx="10"/>
+  <rect class="box" x="654" y="346" width="220" height="64" rx="8"/>
+  <text class="t" x="670" y="373">Next.js dashboard</text>
+  <text class="s" x="670" y="393">charts · tables · CSV export</text>
+
+  <rect class="box" x="350" y="352" width="180" height="52" rx="8"/>
+  <text class="t" x="366" y="376">Site owner</text>
+  <text class="s" x="366" y="394">browser</text>
+  <path class="cool" d="M532 378 H652" marker-end="url(#cool)"/>
+  <text class="lab" x="560" y="370">signs in</text>
+
+  <path class="cool" d="M764 344 V280" marker-end="url(#cool)"/>
+  <text class="lab" x="774" y="308">reads as the user</text>
+  <text class="lab" x="774" y="322">(anon key + RLS)</text>
+
+  <!-- Legend -->
+  <path class="hot" d="M16 452 H44" marker-end="url(#hot)"/>
+  <text class="s" x="52" y="456">write path: only the tracking function can insert events</text>
+  <path class="cool" d="M420 452 H448" marker-end="url(#cool)"/>
+  <text class="s" x="456" y="456">read path: the dashboard sees only the owner's sites</text>
+</svg>
