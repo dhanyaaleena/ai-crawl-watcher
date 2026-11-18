@@ -85,7 +85,7 @@ export default async function PlatformsPage({ params, searchParams }: PageProps<
             <div className="overflow-x-auto">
               <table className="w-full min-w-[640px] text-sm">
                 <thead>
-                  <tr className="border-y border-line text-left text-xs text-ink-3">
+                  <tr className="border-b border-line text-left text-xs text-ink-3">
                     <th className="px-5 py-2 font-medium">Bot</th>
                     <th className="px-3 py-2 font-medium">Platform</th>
                     <th className="px-3 py-2 font-medium">Purpose</th>

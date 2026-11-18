@@ -12,7 +12,7 @@ export function EmptyState({ siteId, filtered }: { siteId: string; filtered: boo
           : "Once the tracking code is on your site, visits from AI crawlers show up here within seconds."}
       </p>
       {!filtered && (
-        <Link href={`/dashboard/${siteId}/settings`} className="mt-4 rounded-md bg-ink px-3 py-1.5 text-sm font-medium text-surface hover:opacity-90">
+        <Link href={`/dashboard/${siteId}/settings`} className="mt-4 rounded-md btn-primary px-3 py-1.5 text-sm font-medium">
           Get the tracking code
         </Link>
       )}

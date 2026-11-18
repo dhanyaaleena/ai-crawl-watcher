@@ -22,7 +22,7 @@ export function PageHeader({
     <header className="mb-6 space-y-4">
       <div>
         <div className="flex flex-wrap items-center gap-2.5">
-          <h1 className="text-xl font-semibold tracking-tight">{title}</h1>
+          <h1 className="text-2xl font-normal tracking-[-0.035em]">{title}</h1>
           {badge}
         </div>
         {description && <p className="mt-1 text-sm text-ink-3">{description}</p>}

@@ -181,3 +181,26 @@ export async function getLastEvent(siteId: string): Promise<EventRow | null> {
   if (error) throw error;
   return data as EventRow | null;
 }
+
+export interface RecentVisit {
+  id: string;
+  timestamp: string;
+  bot_name: string;
+  platform: string;
+  bot_type: string;
+  page_path: string | null;
+}
+
+/** Newest visits regardless of filters, for the live crawl log. */
+export async function getRecentVisits(siteId: string, limit = 8): Promise<RecentVisit[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("crawler_events")
+    .select("id, timestamp, bot_name, platform, bot_type, page_path")
+    .eq("site_id", siteId)
+    .order("timestamp", { ascending: false })
+    .order("id", { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+  return data as RecentVisit[];
+}

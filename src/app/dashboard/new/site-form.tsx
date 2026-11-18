@@ -23,7 +23,7 @@ export function SiteForm() {
           <button
             type="submit"
             disabled={pending}
-            className="rounded-md bg-ink px-4 py-2 text-sm font-medium text-surface hover:opacity-90 disabled:opacity-60"
+            className="rounded-md btn-primary px-4 py-2 text-sm font-medium"
           >
             {pending ? "Adding…" : "Add site"}
           </button>

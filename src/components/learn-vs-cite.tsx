@@ -1,4 +1,4 @@
-import { ArrowDownRight, ArrowUpRight } from "lucide-react";
+import { DeltaPill } from "@/components/delta-pill";
 import { InfoTip } from "@/components/info-tip";
 import { changeVsPrevious, formatNumber, formatPercent, plural } from "@/lib/format";
 import type { PurposeSplit } from "@/lib/purpose";
@@ -130,13 +130,12 @@ function Side({
         </InfoTip>
       </div>
       <div className="mt-1 flex flex-wrap items-baseline gap-x-2.5">
-        <span className="text-2xl font-semibold tracking-tight tabular-nums">{formatNumber(visits)}</span>
+        <span className="text-3xl font-normal tracking-[-0.04em] tabular-nums">{formatNumber(visits)}</span>
         <span className="text-sm text-ink-3">{share}</span>
         {change && (
-          <span className="inline-flex items-center gap-0.5 text-xs text-ink-3" title="Compared with the previous period of the same length">
-            {change.direction === "up" && <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />}
-            {change.direction === "down" && <ArrowDownRight className="h-3.5 w-3.5" aria-hidden="true" />}
-            {change.label} vs previous
+          <span className="inline-flex items-center gap-1.5 text-xs text-ink-3">
+            <DeltaPill change={change} />
+            vs previous
           </span>
         )}
       </div>

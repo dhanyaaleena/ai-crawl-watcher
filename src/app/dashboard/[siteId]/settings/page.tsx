@@ -79,7 +79,7 @@ export default async function SettingsPage({ params, searchParams }: PageProps<"
             </p>
             <a
               href={`/api/export?site=${site.id}&all=1`}
-              className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-md bg-ink px-3 py-1.5 text-sm font-medium text-surface hover:opacity-90"
+              className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-md btn-primary px-3 py-1.5 text-sm font-medium"
             >
               <Download className="h-4 w-4" /> Download all data
             </a>

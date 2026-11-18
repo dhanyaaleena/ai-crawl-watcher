@@ -96,7 +96,7 @@ export function InstallStatus({ siteId, last }: { siteId: string; last: LastVisi
         <button
           type="submit"
           disabled={sending}
-          className="inline-flex items-center gap-1.5 rounded-md bg-ink px-3 py-1.5 text-sm font-medium text-surface hover:opacity-90 disabled:opacity-60"
+          className="inline-flex items-center gap-1.5 rounded-md btn-primary px-3 py-1.5 text-sm font-medium"
         >
           {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
           Send a test visit

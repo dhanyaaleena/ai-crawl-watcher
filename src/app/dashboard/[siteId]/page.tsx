@@ -4,23 +4,28 @@ import { SampleDataTag } from "@/components/badges";
 import { Card } from "@/components/card";
 import { EmptyState } from "@/components/empty-state";
 import { LearnVsCite } from "@/components/learn-vs-cite";
+import { DeltaPill } from "@/components/delta-pill";
+import { LiveLog } from "@/components/live-log";
 import { PageHeader } from "@/components/page-header";
 import { PlatformBars } from "@/components/platform-bars";
 import { TimelineChart } from "@/components/timeline-chart";
 import { filtersToQuery, previousFilters, RANGES } from "@/lib/filters";
 import { changeVsPrevious, formatNumber, formatPercent, plural, timeAgo } from "@/lib/format";
-import { getBotBreakdown, getOverview, getTimeseries, getTopPages, groupByPlatform } from "@/lib/queries";
+import { getBotBreakdown, getOverview, getRecentVisits, getTimeseries, getTopPages, groupByPlatform } from "@/lib/queries";
 import { purposeSplit } from "@/lib/purpose";
 import { loadSitePage } from "./_data";
 
 export default async function OverviewPage({ params, searchParams }: PageProps<"/dashboard/[siteId]">) {
-  const { site, filters: f } = await loadSitePage(params, searchParams);
-  const [overview, bots, previousBots, pages, timeline] = await Promise.all([
+  const { site, filters: f, sp } = await loadSitePage(params, searchParams);
+  // ?layout=classic keeps the earlier boxed-tile Overview reachable for comparison.
+  const classic = sp.layout === "classic";
+  const [overview, bots, previousBots, pages, timeline, recent] = await Promise.all([
     getOverview(site.id, f),
     getBotBreakdown(site.id, f),
     getBotBreakdown(site.id, previousFilters(f)),
     getTopPages(site.id, f, 6),
     getTimeseries(site.id, f),
+    classic ? Promise.resolve([]) : getRecentVisits(site.id),
   ]);
   const platforms = groupByPlatform(bots);
   const total = Number(overview.total_visits);
@@ -39,7 +44,34 @@ export default async function OverviewPage({ params, searchParams }: PageProps<"
       {total === 0 ? (
         <EmptyState siteId={site.id} filtered={Boolean(f.platform || f.type)} />
       ) : (
-        <div className="space-y-4">
+        <div className={classic ? "space-y-4" : "space-y-6"}>
+          {!classic && (
+            <>
+              <dl className="grid grid-cols-2 border-y border-line-strong lg:grid-cols-4">
+                <Figure label="Crawler visits" value={formatNumber(total)}>
+                  {change ? (
+                    <span className="inline-flex items-center gap-1.5">
+                      <DeltaPill change={change} />
+                      vs previous
+                    </span>
+                  ) : (
+                    rangeLabel
+                  )}
+                </Figure>
+                <Figure label="Active bots" value={formatNumber(overview.active_bots)}>
+                  across {plural(platforms.length, "platform")}
+                </Figure>
+                <Figure label="Top platform" value={overview.top_platform ?? "–"}>
+                  {formatPercent(Number(overview.top_platform_visits), total)} of visits
+                </Figure>
+                <Figure label="Top page" value={overview.top_page ?? "–"} mono>
+                  {plural(Number(overview.top_page_visits), "visit")} · {plural(Number(overview.pages_crawled), "page")} crawled
+                </Figure>
+              </dl>
+              <LiveLog siteId={site.id} initial={recent} tz={f.tz} />
+            </>
+          )}
+          {classic && (
           <div className="grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-line bg-line lg:grid-cols-4">
             <Stat label="Crawler visits" value={formatNumber(total)}>
               {change ? (
@@ -63,6 +95,7 @@ export default async function OverviewPage({ params, searchParams }: PageProps<"
               {plural(Number(overview.top_page_visits), "visit")} · {plural(Number(overview.pages_crawled), "page")} crawled
             </Stat>
           </div>
+          )}
 
           {/* The purpose lens only makes sense across bot types, so it hides when one type is filtered. */}
           {!f.type && <LearnVsCite split={purposeSplit(bots)} previous={purposeSplit(previousBots)} />}
@@ -76,7 +109,7 @@ export default async function OverviewPage({ params, searchParams }: PageProps<"
               <PlatformBars rows={platforms} limit={7} />
             </Card>
             <Card title="Most crawled pages" action={<ViewAll href={`/dashboard/${site.id}/pages${q}`} />} flush>
-              <ol className="divide-y divide-line border-t border-line">
+              <ol className="divide-y divide-line">
                 {pages.map((p) => (
                   <li key={p.page_path} className="flex items-center justify-between gap-4 px-5 py-2.5 text-sm">
                     <span className="truncate font-mono text-[13px] text-ink-2" title={p.page_path}>{p.page_path}</span>
@@ -100,6 +133,22 @@ function Stat({ label, value, children, mono }: { label: string; value: string; 
         {value}
       </div>
       <div className="mt-1 truncate text-xs text-ink-3">{children}</div>
+    </div>
+  );
+}
+
+/** A headline figure on hairline rules: big tabular numerals, no box. */
+function Figure({ label, value, children, mono }: { label: string; value: string; children: React.ReactNode; mono?: boolean }) {
+  return (
+    <div className="min-w-0 py-5 pr-4 even:border-l even:border-line even:pl-5 [&:nth-child(n+3)]:border-t [&:nth-child(n+3)]:border-line lg:border-l lg:border-line lg:pl-6 lg:first:border-l-0 lg:first:pl-0 lg:[&:nth-child(n+3)]:border-t-0">
+      <dt className="text-xs text-ink-3">{label}</dt>
+      <dd
+        className={`mt-2 truncate leading-none ${mono ? "font-mono text-2xl tracking-tight lg:text-[1.75rem]" : "text-3xl font-normal tracking-[-0.04em] tabular-nums lg:text-[2.75rem]"}`}
+        title={value}
+      >
+        {value}
+      </dd>
+      <dd className="mt-2.5 truncate text-xs text-ink-3">{children}</dd>
     </div>
   );
 }
