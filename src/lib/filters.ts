@@ -123,3 +123,9 @@ export function zonedMidnight(year: number, month: number, day: number, tz: stri
   t = guess - tzOffsetMs(new Date(t), tz);
   return new Date(t);
 }
+
+/** The same-length window immediately before `f`, for "vs previous period" comparisons. */
+export function previousFilters(f: Filters): Filters {
+  const span = f.until.getTime() - f.since.getTime();
+  return { ...f, since: new Date(f.since.getTime() - span), until: f.since, buckets: [] };
+}

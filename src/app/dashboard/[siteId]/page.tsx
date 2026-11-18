@@ -2,19 +2,22 @@ import { ArrowDownRight, ArrowUpRight } from "lucide-react";
 import Link from "next/link";
 import { Card } from "@/components/card";
 import { EmptyState } from "@/components/empty-state";
+import { LearnVsCite } from "@/components/learn-vs-cite";
 import { PageHeader } from "@/components/page-header";
 import { PlatformBars } from "@/components/platform-bars";
 import { TimelineChart } from "@/components/timeline-chart";
-import { filtersToQuery, RANGES } from "@/lib/filters";
+import { filtersToQuery, previousFilters, RANGES } from "@/lib/filters";
 import { changeVsPrevious, formatNumber, formatPercent, plural, timeAgo } from "@/lib/format";
 import { getBotBreakdown, getOverview, getTimeseries, getTopPages, groupByPlatform } from "@/lib/queries";
+import { purposeSplit } from "@/lib/purpose";
 import { loadSitePage } from "./_data";
 
 export default async function OverviewPage({ params, searchParams }: PageProps<"/dashboard/[siteId]">) {
   const { site, filters: f } = await loadSitePage(params, searchParams);
-  const [overview, bots, pages, timeline] = await Promise.all([
+  const [overview, bots, previousBots, pages, timeline] = await Promise.all([
     getOverview(site.id, f),
     getBotBreakdown(site.id, f),
+    getBotBreakdown(site.id, previousFilters(f)),
     getTopPages(site.id, f, 6),
     getTimeseries(site.id, f),
   ]);
@@ -60,6 +63,9 @@ export default async function OverviewPage({ params, searchParams }: PageProps<"
               {plural(Number(overview.top_page_visits), "visit")} · {plural(Number(overview.pages_crawled), "page")} crawled
             </Stat>
           </div>
+
+          {/* The purpose lens only makes sense across bot types, so it hides when one type is filtered. */}
+          {!f.type && <LearnVsCite split={purposeSplit(bots)} previous={purposeSplit(previousBots)} />}
 
           <Card title="Crawler activity">
             <TimelineChart points={timeline.points} series={timeline.series} bucket={f.bucket} tz={f.tz} />

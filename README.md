@@ -54,7 +54,7 @@ Pages are `weight:path`, comma-separated. `visits:send` only needs the endpoint 
 ### Checks
 
 ```bash
-npm test          # 39 unit tests: classifier, URL/IP handling, CSV, time ranges, snippet size
+npm test          # 46 unit tests: classifier, URL/IP handling, CSV, time ranges, snippet size
 ```
 
 ```bash
@@ -75,6 +75,11 @@ npm run typecheck && npm run lint && npm run build
 | Dashboard | `src/app/dashboard/[siteId]/…` | Overview, Platforms, Pages, Activity log, Settings |
 | CSV export | `src/app/api/export/route.ts` | Streams in keyset-paginated batches of 1,000; current filters or `all=1` |
 | Demo + smoke scripts | `scripts/` | `seed-demo.mjs`, `send-bot-visits.mjs`, `backfill-visits.mjs`, `smoke-track.mjs`; shared bot mix in `lib/demo-traffic.mjs` |
+
+## Two things worth trying
+
+- **Training vs retrieval** (Overview): splits AI traffic into training crawlers and retrieval bots (search indexing and on-demand assistant fetches), with the change vs the previous period, a one-line summary and a per-platform comparison. The Platforms page breaks the same groups down by bot type. Built on the PRD's bot types (FR-2.3).
+- **Live install status** (Settings): while a new site has no data, the page listens for the first visit and announces it the moment it lands. "Send a test visit" pushes one request through the real tracking endpoint; it's stored as an Unknown bot named `Crawlwatch-TestBot` on `/crawlwatch-test`, never as a real AI crawler.
 
 ## Installing the tracker on a site
 

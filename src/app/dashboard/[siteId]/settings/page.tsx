@@ -1,15 +1,16 @@
-import { CircleCheck, Clock, Download } from "lucide-react";
+import { Download } from "lucide-react";
 import type { Metadata } from "next";
 import { Card } from "@/components/card";
 import { CopyButton } from "@/components/copy-button";
 import { PageHeader } from "@/components/page-header";
 import { TRACK_ENDPOINT } from "@/lib/env";
-import { formatDateTime, timeAgo } from "@/lib/format";
+import { formatDateTime } from "@/lib/format";
 import { getLastEvent } from "@/lib/queries";
 import { headSnippet, bodySnippet, serverSnippet } from "@/lib/snippet";
 import { loadSitePage } from "../_data";
 import { DeleteSiteButton } from "./delete-site";
 import { InstallCheckButton } from "./install-check";
+import { InstallStatus } from "./install-status";
 
 export const metadata: Metadata = { title: "Settings" };
 
@@ -47,24 +48,13 @@ export default async function SettingsPage({ params, searchParams }: PageProps<"
               </p>
             </Step>
             <Step n={3} title="Confirm it’s live">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <InstallStatus
+                siteId={site.id}
+                last={last && { id: last.id, timestamp: last.timestamp, bot_name: last.bot_name, page_path: last.page_path }}
+              />
+              <div className="mt-4 border-t border-line pt-4">
+                <p className="mb-2 text-xs text-ink-3">Already published the snippet? Check that it’s on your homepage:</p>
                 <InstallCheckButton siteId={site.id} />
-                <div className="flex items-center gap-1.5 text-sm text-ink-2">
-                  {last ? (
-                    <>
-                      <CircleCheck className="h-4 w-4 text-good" aria-hidden="true" />
-                      <span>
-                        Last crawler visit {timeAgo(last.timestamp)} · {last.bot_name} on{" "}
-                        <span className="font-mono text-[13px]">{last.page_path}</span>
-                      </span>
-                    </>
-                  ) : (
-                    <>
-                      <Clock className="h-4 w-4 text-ink-3" aria-hidden="true" />
-                      <span>Waiting for the first crawler visit</span>
-                    </>
-                  )}
-                </div>
               </div>
             </Step>
           </ol>

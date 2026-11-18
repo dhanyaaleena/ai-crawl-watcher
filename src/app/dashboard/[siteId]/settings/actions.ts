@@ -2,7 +2,9 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { TRACK_ENDPOINT } from "@/lib/env";
 import { getSite } from "@/lib/queries";
+import { TEST_BOT_UA, TEST_PATH } from "@/lib/test-visit";
 import { createClient } from "@/lib/supabase/server";
 
 export interface InstallCheck {
@@ -48,4 +50,37 @@ export async function deleteSite(siteId: string): Promise<void> {
   if (error) throw error;
   revalidatePath("/dashboard", "layout"); // the sidebar lists sites
   redirect("/dashboard");
+}
+
+export interface TestVisit {
+  status: "idle" | "recorded" | "failed";
+  message?: string;
+}
+
+/**
+ * Sends one visit through the real tracking endpoint, exactly as the snippet
+ * would, so the owner can see the whole pipeline work before real crawlers come.
+ */
+export async function sendTestVisit(siteId: string): Promise<TestVisit> {
+  const site = await getSite(siteId);
+  if (!site) return { status: "failed", message: "Site not found." };
+  const page = `https://${site.domain}${TEST_PATH}`;
+  try {
+    const res = await fetch(`${TRACK_ENDPOINT}?sid=${encodeURIComponent(siteId)}&u=${encodeURIComponent(page)}`, {
+      headers: { "user-agent": TEST_BOT_UA },
+      cache: "no-store",
+      signal: AbortSignal.timeout(8000),
+    });
+    const outcome = res.headers.get("x-track-outcome");
+    revalidatePath(`/dashboard/${siteId}`, "layout");
+    if (res.ok && outcome === "recorded") {
+      return { status: "recorded", message: "Test visit recorded. Your tracking endpoint is working." };
+    }
+    return {
+      status: "failed",
+      message: `The tracking endpoint answered "${outcome ?? res.status}" instead of recording the visit.`,
+    };
+  } catch (err) {
+    return { status: "failed", message: `Couldn't reach the tracking endpoint (${(err as Error).message}).` };
+  }
 }

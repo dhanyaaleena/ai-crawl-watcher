@@ -12,6 +12,12 @@ import { loadSitePage } from "../_data";
 
 export const metadata: Metadata = { title: "Platforms" };
 
+const PURPOSE_GROUPS: { key: string; label: string; types: string[]; swatch: string }[] = [
+  { key: "learning", label: "Training", types: ["training"], swatch: "bg-learn" },
+  { key: "citing", label: "Retrieval", types: ["search", "assistant"], swatch: "bg-cite" },
+  { key: "other", label: "Unclassified", types: ["unknown"], swatch: "bg-ink-3" },
+];
+
 export default async function PlatformsPage({ params, searchParams }: PageProps<"/dashboard/[siteId]/platforms">) {
   const { site, filters: f } = await loadSitePage(params, searchParams);
   const bots = await getBotBreakdown(site.id, f);
@@ -35,22 +41,43 @@ export default async function PlatformsPage({ params, searchParams }: PageProps<
               <PlatformBars rows={platforms} />
             </Card>
             <Card title="Visits by purpose">
-              <ul className="space-y-4">
-                {byType.map((t) => (
-                  <li key={t.value}>
-                    <div className="flex items-baseline justify-between gap-3 text-sm">
-                      <span className="text-ink">{t.label}</span>
-                      <span className="tabular-nums">
-                        {formatNumber(t.visits)} <span className="text-ink-3">{formatPercent(t.visits, total)}</span>
-                      </span>
-                    </div>
-                    <div className="mt-1.5 h-1.5 rounded-full bg-surface-2" aria-hidden="true">
-                      <div className="h-full rounded-full bg-ink-3" style={{ width: `${(t.visits / maxType) * 100}%` }} />
-                    </div>
-                    <p className="mt-1 text-xs text-ink-3">{BOT_TYPE_HELP[t.value]}</p>
-                  </li>
-                ))}
-              </ul>
+              {/* Same two sides as the Overview's "Training vs retrieval", broken down by bot type. */}
+              <div className="space-y-5">
+                {PURPOSE_GROUPS.map((g) => {
+                  const types = byType.filter((t) => g.types.includes(t.value));
+                  const visits = types.reduce((n, t) => n + t.visits, 0);
+                  return (
+                    <section key={g.key} aria-label={g.label}>
+                      <div className="flex items-baseline justify-between gap-3 text-xs text-ink-3">
+                        <span className="flex items-center gap-2">
+                          <span className={`h-2.5 w-2.5 rounded-sm ${g.swatch}`} aria-hidden="true" />
+                          {g.label}
+                        </span>
+                        <span className="tabular-nums">{formatNumber(visits)}</span>
+                      </div>
+                      <ul className="mt-2 space-y-3">
+                        {types.map((t) => (
+                          <li key={t.value}>
+                            <div className="flex items-baseline justify-between gap-3 text-sm">
+                              <span className="text-ink">{t.label}</span>
+                              <span className="tabular-nums">
+                                {formatNumber(t.visits)} <span className="text-ink-3">{formatPercent(t.visits, total)}</span>
+                              </span>
+                            </div>
+                            <div className="mt-1.5 h-1.5 rounded-full bg-surface-2" aria-hidden="true">
+                              <div
+                                className={`h-full rounded-full ${g.swatch}`}
+                                style={{ width: `${(t.visits / maxType) * 100}%`, minWidth: t.visits ? 3 : 0 }}
+                              />
+                            </div>
+                            <p className="mt-1 text-xs text-ink-3">{BOT_TYPE_HELP[t.value]}</p>
+                          </li>
+                        ))}
+                      </ul>
+                    </section>
+                  );
+                })}
+              </div>
             </Card>
           </div>
 
