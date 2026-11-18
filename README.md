@@ -39,6 +39,18 @@ npm run dev                 # http://localhost:3000
 
 Sign in with the demo account printed by `seed:demo` (defined at the top of `scripts/seed-demo.mjs`), or create your own account and add a site.
 
+### Sample traffic for any site
+
+```bash
+npm run visits:send -- <site-id> <domain> 40 "5:/,3:/blog,2:/about"   # 40 bot visits through the real tracking endpoint, stamped now
+```
+
+```bash
+npm run visits:backfill -- <site-id> "5:/,3:/blog,2:/about" --spread-existing   # 30 days of history written to the database
+```
+
+Pages are `weight:path`, comma-separated. `visits:send` only needs the endpoint (`TRACK_ENDPOINT` or `NEXT_PUBLIC_SUPABASE_URL`) and the site's own domain. `visits:backfill` needs `SUPABASE_SERVICE_ROLE_KEY`, adds history each time it runs, and with `--spread-existing` first moves the site's current visits across the 30 days. Both use the bot mix in `scripts/lib/demo-traffic.mjs`. Everything they write is real data for that site, so point them at demo or test sites only.
+
 ### Checks
 
 ```bash
@@ -62,7 +74,7 @@ npm run typecheck && npm run lint && npm run build
 | Tracking endpoint | `supabase/functions/track/index.ts` | `GET` → no-op JS (snippet), `GET &f=gif` → 1×1 GIF (`<noscript>`), `POST` → 204 (sendBeacon / server forwarding). Never errors toward the host page |
 | Dashboard | `src/app/dashboard/[siteId]/…` | Overview, Platforms, Pages, Activity log, Settings |
 | CSV export | `src/app/api/export/route.ts` | Streams in keyset-paginated batches of 1,000; current filters or `all=1` |
-| Demo + smoke scripts | `scripts/` | `seed-demo.mjs`, `smoke-track.mjs` |
+| Demo + smoke scripts | `scripts/` | `seed-demo.mjs`, `send-bot-visits.mjs`, `backfill-visits.mjs`, `smoke-track.mjs`; shared bot mix in `lib/demo-traffic.mjs` |
 
 ## Installing the tracker on a site
 

@@ -13,6 +13,8 @@
     "db:reset": "supabase db reset",
     "functions:serve": "supabase functions serve track --no-verify-jwt",
     "seed:demo": "node scripts/seed-demo.mjs",
+    "visits:send": "node scripts/send-bot-visits.mjs",
+    "visits:backfill": "node scripts/backfill-visits.mjs",
     "smoke": "node scripts/smoke-track.mjs"
   },
   "dependencies": {
