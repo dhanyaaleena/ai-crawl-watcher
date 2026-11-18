@@ -37,11 +37,11 @@ Two paths that never share a key. **Writes** go through one Edge Function, the o
 
 | Decision | Why | Trade-off |
 | --- | --- | --- |
-| Supabase for database, auth and ingest; no separate backend | Far less to build, run and secure; login and per-user access come built in | Tied to Supabase; some rules live in migrations |
-| Ingest in a Supabase function, not a Vercel route | The dashboard never holds the write key, and tracking keeps working during dashboard deploys | A second runtime (Deno) and deploy step |
+| Three capture paths: snippet, `<noscript>` pixel and server/edge forwarding | Real ChatGPT, Claude and Gemini fetches never ran JavaScript; only forwarding caught them | More install options; full coverage needs a server or edge layer on the site |
+| Anonymise IPs by truncating (/24, /48), then hashing with a secret salt and the site ID | Can't be reversed, and can't be joined across sites | No per-visitor analysis, and no IP-based checks later |
 | Store bots only | Nothing stored about people, and far less data | No human traffic to compare against |
 | Totals computed in SQL | Fast as data grows; every view and the CSV agree | Logic lives in migrations, harder to change than TypeScript |
-| Row level security, not app checks | A dashboard bug can't leak another user's data | Rules need their own tests (the smoke test) |
+| Check the session over the network once (in the proxy), then verify the token locally | Same protection with one fewer round trip per click | Relies on the project's asymmetric signing keys |
 | Fresh data on every click; no prefetch or client cache | Numbers always match the database | ~0.2–0.3 s per click, shown with instant feedback (highlighted filter, progress bar) |
 | Polling every 5 s for the live log | Simpler and cheaper than a socket per viewer | Up to a few seconds of delay |
 | Vercel pinned to Mumbai, next to the database | Measured ~200 ms per query from the default US region, a few ms after | Users far from India pay one longer hop |
