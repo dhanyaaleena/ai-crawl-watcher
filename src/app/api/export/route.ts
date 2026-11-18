@@ -5,7 +5,7 @@ import { getSite, getTimezone } from "@/lib/queries";
 import { createClient } from "@/lib/supabase/server";
 
 const BATCH = 1000;
-const COLUMNS = "id, timestamp, page_url, page_path, bot_name, platform, bot_type, user_agent, ip_hash";
+const COLUMNS = "id, timestamp, page_url, page_path, bot_name, platform, bot_type, user_agent, ip_hash, verification";
 
 interface Row {
   id: string;
@@ -17,6 +17,7 @@ interface Row {
   bot_type: string;
   user_agent: string;
   ip_hash: string | null;
+  verification: string;
 }
 
 /**
@@ -64,6 +65,7 @@ export async function GET(request: NextRequest) {
                       user_agent: r.user_agent,
                       page_path: r.page_path,
                       ip_hash: r.ip_hash,
+                      verification: r.verification,
                     }),
                   )
                   .join(""),

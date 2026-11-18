@@ -1,5 +1,6 @@
 import { Download } from "lucide-react";
 import type { Metadata } from "next";
+import { SampleDataTag } from "@/components/badges";
 import { Card } from "@/components/card";
 import { CopyButton } from "@/components/copy-button";
 import { PageHeader } from "@/components/page-header";
@@ -23,7 +24,7 @@ export default async function SettingsPage({ params, searchParams }: PageProps<"
 
   return (
     <>
-      <PageHeader title="Settings" description={`Tracking code and data for ${site.domain}.`} />
+      <PageHeader title="Settings" description={`Tracking code and data for ${site.domain}.`} badge={site.is_sample ? <SampleDataTag /> : undefined} />
 
       {sp.welcome === "1" && !last && (
         <div className="mb-4 rounded-xl border border-accent/30 bg-accent-soft px-5 py-4 text-sm">

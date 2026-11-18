@@ -1,5 +1,6 @@
-import { ArrowDownRight, ArrowUpRight } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, TriangleAlert } from "lucide-react";
 import Link from "next/link";
+import { SampleDataTag } from "@/components/badges";
 import { Card } from "@/components/card";
 import { EmptyState } from "@/components/empty-state";
 import { LearnVsCite } from "@/components/learn-vs-cite";
@@ -26,6 +27,8 @@ export default async function OverviewPage({ params, searchParams }: PageProps<"
   const change = changeVsPrevious(total, Number(overview.previous_visits));
   const rangeLabel = RANGES.find((r) => r.key === f.range)!.label.toLowerCase();
   const q = filtersToQuery(f);
+  const impostors = bots.filter((b) => Number(b.unverified) > 0).sort((a, b) => Number(b.unverified) - Number(a.unverified));
+  const unverified = impostors.reduce((n, b) => n + Number(b.unverified), 0);
 
   return (
     <>
@@ -33,8 +36,7 @@ export default async function OverviewPage({ params, searchParams }: PageProps<"
         title={site.domain}
         description={overview.last_seen ? `Last crawler visit ${timeAgo(overview.last_seen)}` : "AI crawler activity"}
         siteId={site.id}
-        filters={f}
-      />
+        filters={f} badge={site.is_sample ? <SampleDataTag /> : undefined} />
 
       {total === 0 ? (
         <EmptyState siteId={site.id} filtered={Boolean(f.platform || f.type)} />
@@ -63,6 +65,23 @@ export default async function OverviewPage({ params, searchParams }: PageProps<"
               {plural(Number(overview.top_page_visits), "visit")} · {plural(Number(overview.pages_crawled), "page")} crawled
             </Stat>
           </div>
+
+          {unverified > 0 && (
+            <Link
+              href={`/dashboard/${site.id}/activity${q}${q ? "&" : "?"}v=unverified`}
+              className="flex items-start gap-3 rounded-xl border border-warning/60 bg-warning/10 px-5 py-3 text-sm hover:bg-warning/15"
+            >
+              <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0 text-warning-ink" aria-hidden="true" />
+              <span>
+                <span className="font-medium text-ink">
+                  {plural(unverified, "visit")} claimed to be {listNames(impostors.map((b) => b.bot_name))} but came from
+                  outside the operator&apos;s published IP addresses.
+                </span>{" "}
+                <span className="text-ink-2">These are likely impersonators. </span>
+                <span className="text-accent-ink">Review them</span>
+              </span>
+            </Link>
+          )}
 
           {/* The purpose lens only makes sense across bot types, so it hides when one type is filtered. */}
           {!f.type && <LearnVsCite split={purposeSplit(bots)} previous={purposeSplit(previousBots)} />}
@@ -110,4 +129,10 @@ function ViewAll({ href }: { href: string }) {
       View all
     </Link>
   );
+}
+
+function listNames(names: string[]): string {
+  const shown = names.slice(0, 2);
+  const rest = names.length - shown.length;
+  return rest > 0 ? `${shown.join(", ")} and ${rest} more` : shown.join(" and ");
 }

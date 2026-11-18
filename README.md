@@ -54,7 +54,7 @@ Pages are `weight:path`, comma-separated. `visits:send` only needs the endpoint 
 ### Checks
 
 ```bash
-npm test          # 46 unit tests: classifier, URL/IP handling, CSV, time ranges, snippet size
+npm test          # 60 unit tests: classifier, IP verification, URL/IP handling, CSV, time ranges, snippet size
 ```
 
 ```bash
@@ -70,15 +70,18 @@ npm run typecheck && npm run lint && npm run build
 | Area | Where | Notes |
 | --- | --- | --- |
 | Schema, RLS, analytics SQL | `supabase/migrations/20261116000000_crawler_analytics.sql` | PRD schema plus `NOT NULL`s, `timestamptz`, cascade deletes, owner insert/update/delete on `sites`, and four `SECURITY INVOKER` aggregate functions so RLS applies to every chart |
+| Crawler verification | `supabase/functions/_shared/verify.ts` | Official IP lists per bot, IPv4/IPv6 CIDR matching, cached downloads that fail safe to `unchecked`; migration `20261118000000_crawler_verification.sql` adds `verification` and `sites.is_sample` |
 | Bot classification | `supabase/functions/_shared/bots.ts` | 28 signatures across 18 platforms, typed `training` / `search` / `assistant`; other bots are stored as **Unknown** with a readable name (e.g. `Googlebot`); browsers are ignored. Shared by the edge function, dashboard and tests |
 | Tracking endpoint | `supabase/functions/track/index.ts` | `GET` → no-op JS (snippet), `GET &f=gif` → 1×1 GIF (`<noscript>`), `POST` → 204 (sendBeacon / server forwarding). Never errors toward the host page |
 | Dashboard | `src/app/dashboard/[siteId]/…` | Overview, Platforms, Pages, Activity log, Settings |
 | CSV export | `src/app/api/export/route.ts` | Streams in keyset-paginated batches of 1,000; current filters or `all=1` |
 | Demo + smoke scripts | `scripts/` | `seed-demo.mjs`, `send-bot-visits.mjs`, `backfill-visits.mjs`, `smoke-track.mjs`; shared bot mix in `lib/demo-traffic.mjs` |
 
-## Two things worth trying
+## Worth trying
 
 - **Training vs retrieval** (Overview): splits AI traffic into training crawlers and retrieval bots (search indexing and on-demand assistant fetches), with the change vs the previous period, a one-line summary and a per-platform comparison. The Platforms page breaks the same groups down by bot type. Built on the PRD's bot types (FR-2.3).
+- **Crawler verification** (Overview, Platforms, Activity log, CSV): anyone can send `User-Agent: GPTBot`, so each visit's IP is checked against the operator's official list before the IP is hashed. Lists: OpenAI (GPTBot, OAI-SearchBot, ChatGPT-User), Anthropic, Perplexity (bot and user), Google, Apple, Common Crawl and DuckDuckGo, downloaded by the edge function and cached for 6 hours. Visits are **verified**, **unverified** (named a listed crawler, came from elsewhere: likely an impersonator) or **unchecked** (no published list, e.g. Meta, ByteDance, Amazon; or the list was unavailable, which never counts against a visit). The IP is `cf-connecting-ip`, which Supabase's gateway sets and callers can't forge (tested by sending forged headers). Server-side forwarding sends the crawler's IP in the body, so that path trusts the site's own server. Try it: send a request as GPTBot from your own machine and it shows up **Unverified**.
+- **Sample data label**: sites filled by `seed:demo` or `visits:backfill` are marked `is_sample` and show a "Sample data" tag on every page, so generated traffic is never mistaken for real visits. Generated visits from verifiable bots are labelled like real traffic (about 94% verified).
 - **Live install status** (Settings): while a new site has no data, the page listens for the first visit and announces it the moment it lands. "Send a test visit" pushes one request through the real tracking endpoint; it's stored as an Unknown bot named `Crawlwatch-TestBot` on `/crawlwatch-test`, never as a real AI crawler.
 
 ## Installing the tracker on a site
@@ -87,7 +90,7 @@ Settings shows the code with the site id filled in:
 
 1. **`<head>` snippet** (about 320 bytes, async): injects `<script src=".../track?sid=…&u=<page url>">`. The edge function classifies the **request's own User-Agent**, so the crawler identifies itself just by loading the script.
 2. **`<noscript>` pixel** right after `<body>`: for crawlers that don't run JavaScript but do fetch images. The page comes from the `Referer` (`referrerpolicy="no-referrer-when-downgrade"` keeps the full path).
-3. **Optional server-side forwarding** (shown under Settings): a short middleware that POSTs bot requests to the same endpoint. This is the only way to see crawlers that fetch nothing but HTML.
+3. **Optional server-side forwarding** (shown under Settings): a short middleware that POSTs bot requests to the same endpoint, with the crawler's IP for verification. This is the only way to see crawlers that fetch nothing but HTML, which includes most AI crawlers and every "ask ChatGPT/Claude to read this page" fetch.
 
 "Check installation" fetches the site's homepage server side and looks for the site id. Private, IP-literal and reserved hostnames are refused to avoid SSRF.
 

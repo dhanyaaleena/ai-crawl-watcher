@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Local Netlify demo site (not part of the app; not in git).
+    "test-site/**",
   ]),
 ]);
 

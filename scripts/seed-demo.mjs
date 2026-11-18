@@ -104,9 +104,16 @@ async function main() {
   // 2. Demo site, reset its events
   let { data: site } = await db.from("sites").select("id").eq("user_id", user.id).eq("domain", DEMO_DOMAIN).maybeSingle();
   if (!site) {
-    const { data, error } = await db.from("sites").insert({ user_id: user.id, domain: DEMO_DOMAIN }).select("id").single();
+    const { data, error } = await db
+      .from("sites")
+      .insert({ user_id: user.id, domain: DEMO_DOMAIN, is_sample: true })
+      .select("id")
+      .single();
     if (error) throw error;
     site = data;
+  } else {
+    const { error } = await db.from("sites").update({ is_sample: true }).eq("id", site.id);
+    if (error) throw error;
   }
   const { error: clearError } = await db.from("crawler_events").delete().eq("site_id", site.id);
   if (clearError) throw clearError;

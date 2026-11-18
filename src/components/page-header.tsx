@@ -8,17 +8,23 @@ export function PageHeader({
   description,
   siteId,
   filters,
+  badge,
 }: {
   title: string;
   description?: string;
   siteId?: string;
   filters?: Filters;
+  /** Shown next to the title, e.g. the "Sample data" label. */
+  badge?: React.ReactNode;
 }) {
   const q = filters ? filtersToQuery(filters).replace(/^\?/, "&") : "";
   return (
     <header className="mb-6 space-y-4">
       <div>
-        <h1 className="text-xl font-semibold tracking-tight">{title}</h1>
+        <div className="flex flex-wrap items-center gap-2.5">
+          <h1 className="text-xl font-semibold tracking-tight">{title}</h1>
+          {badge}
+        </div>
         {description && <p className="mt-1 text-sm text-ink-3">{description}</p>}
       </div>
       {filters && siteId && (

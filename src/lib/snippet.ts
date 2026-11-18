@@ -22,11 +22,13 @@ const BOTS = /bot|crawl|spider|GPT|Claude|Perplexity|Bytespider|Google-Extended/
 export function middleware(req: NextRequest, event: NextFetchEvent) {
   const ua = req.headers.get("user-agent") ?? "";
   if (BOTS.test(ua)) {
+    // The crawler's IP lets Crawlwatch check it against the operator's published list.
+    const ip = (req.headers.get("x-forwarded-for") ?? "").split(",")[0].trim();
     event.waitUntil(
       fetch("${endpoint}", {
         method: "POST",
-        headers: { "user-agent": ua, "x-forwarded-for": req.headers.get("x-forwarded-for") ?? "" },
-        body: JSON.stringify({ sid: "${siteId}", u: req.url }),
+        headers: { "user-agent": ua },
+        body: JSON.stringify({ sid: "${siteId}", u: req.url, ip }),
       }).catch(() => {}),
     );
   }

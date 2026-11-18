@@ -9,7 +9,9 @@
 // --spread-existing also moves the site's current visits to random times in the
 // last 30 days (e.g. visits just sent with visits:send). Needs
 // NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY (read from .env.local
-// unless already set). Running it twice adds history twice.
+// unless already set). Running it twice adds history twice. The site is marked
+// as sample data, so the dashboard labels it; generated visits get realistic
+// IP-check labels (scripts/lib/demo-traffic.mjs), never real verification.
 
 import { createClient } from "@supabase/supabase-js";
 import { generateHistory, loadEnv, parsePages } from "./lib/demo-traffic.mjs";
@@ -32,6 +34,9 @@ async function main() {
   const { data: site, error } = await db.from("sites").select("id, domain").eq("id", siteId).maybeSingle();
   if (error) throw error;
   if (!site) throw new Error(`No site with id ${siteId} on ${new URL(url).host}.`);
+
+  const { error: markError } = await db.from("sites").update({ is_sample: true }).eq("id", site.id);
+  if (markError) throw markError;
 
   const now = Date.now();
   if (spread) {

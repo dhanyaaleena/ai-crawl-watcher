@@ -9,11 +9,13 @@ export interface Site {
   id: string;
   domain: string;
   created_at: string;
+  /** Filled with generated demo data; the dashboard labels it "Sample data". */
+  is_sample: boolean;
 }
 
 export const getSites = cache(async (): Promise<Site[]> => {
   const supabase = await createClient();
-  const { data, error } = await supabase.from("sites").select("id, domain, created_at").order("created_at");
+  const { data, error } = await supabase.from("sites").select("id, domain, created_at, is_sample").order("created_at");
   if (error) throw error;
   return data;
 });
@@ -54,6 +56,8 @@ export interface BotRow {
   visits: number;
   pages: number;
   last_seen: string;
+  verified: number;
+  unverified: number;
 }
 
 export async function getBotBreakdown(siteId: string, f: Filters): Promise<BotRow[]> {
@@ -136,25 +140,31 @@ export interface EventRow {
   page_path: string | null;
   page_url: string;
   user_agent: string;
+  verification: Verification;
 }
+
+export type Verification = "verified" | "unverified" | "unchecked";
+
+const EVENT_COLUMNS = "id, timestamp, bot_name, platform, bot_type, page_path, page_url, user_agent, verification";
 
 export const ACTIVITY_PAGE_SIZE = 50;
 
 export async function getActivity(
   siteId: string,
   f: Filters,
-  opts: { page: number; q?: string | null },
+  opts: { page: number; q?: string | null; verification?: Verification | null },
 ): Promise<{ rows: EventRow[]; total: number }> {
   const supabase = await createClient();
   const from = (opts.page - 1) * ACTIVITY_PAGE_SIZE;
   let query = supabase
     .from("crawler_events")
-    .select("id, timestamp, bot_name, platform, bot_type, page_path, page_url, user_agent", { count: "exact" })
+    .select(EVENT_COLUMNS, { count: "exact" })
     .eq("site_id", siteId)
     .gte("timestamp", f.since.toISOString())
     .lt("timestamp", f.until.toISOString());
   if (f.platform) query = query.eq("platform", f.platform);
   if (f.type) query = query.eq("bot_type", f.type);
+  if (opts.verification) query = query.eq("verification", opts.verification);
   if (opts.q) query = query.ilike("page_path", `%${opts.q.replace(/[\\%_]/g, (c) => `\\${c}`)}%`);
   const { data, error, count } = await query
     .order("timestamp", { ascending: false })
@@ -169,7 +179,7 @@ export async function getLastEvent(siteId: string): Promise<EventRow | null> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("crawler_events")
-    .select("id, timestamp, bot_name, platform, bot_type, page_path, page_url, user_agent")
+    .select(EVENT_COLUMNS)
     .eq("site_id", siteId)
     .order("timestamp", { ascending: false })
     .limit(1)

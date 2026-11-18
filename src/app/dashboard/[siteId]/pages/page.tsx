@@ -1,5 +1,6 @@
 import { ExternalLink } from "lucide-react";
 import type { Metadata } from "next";
+import { SampleDataTag } from "@/components/badges";
 import { Card } from "@/components/card";
 import { EmptyState } from "@/components/empty-state";
 import { PageHeader } from "@/components/page-header";
@@ -21,8 +22,7 @@ export default async function PagesPage({ params, searchParams }: PageProps<"/da
         title="Pages"
         description="Pages ranked by how often AI crawlers fetched them (top 100)."
         siteId={site.id}
-        filters={f}
-      />
+        filters={f} badge={site.is_sample ? <SampleDataTag /> : undefined} />
       {pages.length === 0 ? (
         <EmptyState siteId={site.id} filtered={Boolean(f.platform || f.type)} />
       ) : (

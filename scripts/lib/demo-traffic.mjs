@@ -23,6 +23,25 @@ export const BOTS = [
   [2, "Mozilla/5.0 (compatible; MyCustomBot/1.0)", "MyCustomBot", "Unknown", "unknown"],
 ];
 
+/**
+ * Bots whose operators publish their IP addresses; mirrors BOT_IP_LIST in
+ * supabase/functions/_shared/verify.ts. Generated visits from these bots are
+ * labelled like real traffic would be: mostly "verified", a few "unverified"
+ * impersonators. Everything else is "unchecked".
+ */
+export const VERIFIABLE = new Set([
+  "GPTBot", "ChatGPT-User", "OAI-SearchBot",
+  "ClaudeBot", "Claude-User", "Claude-SearchBot",
+  "PerplexityBot", "Perplexity-User",
+  "Google-Extended", "Applebot-Extended", "CCBot", "DuckAssistBot",
+]);
+export const IMPERSONATOR_SHARE = 0.06;
+
+export function sampleVerification(botName) {
+  if (!VERIFIABLE.has(botName)) return "unchecked";
+  return Math.random() < IMPERSONATOR_SHARE ? "unverified" : "verified";
+}
+
 /** Picks one entry from a list of [weight, ...] tuples. */
 export function pick(list) {
   let r = Math.random() * list.reduce((n, x) => n + x[0], 0);
@@ -68,6 +87,7 @@ export function generateHistory({ siteId, domain, pages, days = 30, now = Date.n
         page_url: `https://${domain}${page_path}`,
         page_path,
         ip_hash: randomHash(),
+        verification: sampleVerification(bot_name),
       });
     }
   }
