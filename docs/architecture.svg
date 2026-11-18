@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 910 470" width="910" height="470" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif">
   <title>Crawlwatch architecture</title>
-  <desc>An AI crawler loads a page on a customer's website. The snippet, pixel or the site's middleware reports the visit to the Supabase Edge Function "track", which classifies the user agent, checks the domain, hashes the IP and inserts a row into Postgres. It is the only writer. The site owner uses the Next.js dashboard on Vercel, which reads Postgres as the signed-in user under row level security. Supabase and Vercel both run in Mumbai.</desc>
+  <desc>An AI crawler loads a page on a customer's website. The snippet, pixel or the site's middleware reports the visit to the Supabase Edge Function "track", which classifies the user agent, checks the domain, hashes the IP and inserts a row into Postgres. It is the only writer. The site owner uses the Next.js dashboard on Vercel, which reads Postgres as the signed-in user under row level security.</desc>
   <defs>
     <marker id="hot" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" fill="#e04600"/></marker>
     <marker id="cool" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" fill="#57534e"/></marker>
@@ -34,7 +34,7 @@
   <text class="s" x="52" y="258">middleware forward</text>
 
   <!-- Supabase -->
-  <text class="glabel" x="330" y="30">SUPABASE · MUMBAI</text>
+  <text class="glabel" x="330" y="30">SUPABASE</text>
   <rect class="grp" x="330" y="40" width="564" height="250" rx="10"/>
   <rect class="key" x="350" y="180" width="220" height="96" rx="8"/>
   <text class="t" x="366" y="206">Edge Function: track</text>

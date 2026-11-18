@@ -113,11 +113,12 @@ export default async function ActivityPage({ params, searchParams }: PageProps<"
                 {formatNumber(first)}–{formatNumber(last)}
               </span>{" "}
               of {formatNumber(total)}
-              <span className="hidden sm:inline">
-                {" "}
-                · {ACTIVITY_PAGE_SIZE} per page
-                {pages > 1 && <> · page {formatNumber(page)} of {formatNumber(pages)}</>}
-              </span>
+              {pages > 1 && (
+                <span className="hidden sm:inline">
+                  {" "}
+                  · page {formatNumber(page)} of {formatNumber(pages)}
+                </span>
+              )}
             </span>
             {pages > 1 && (
               <span className="flex gap-2">
