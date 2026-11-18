@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   anonymizeIp,
   clientIp,
+  isIpAddress,
   hostMatchesDomain,
   normalizeDomain,
   normalizePageUrl,
@@ -69,5 +70,12 @@ describe("IP anonymisation", () => {
     expect(clientIp(new Headers({ "x-forwarded-for": "1.1.1.1, 10.0.0.1" }))).toBe("1.1.1.1");
     expect(clientIp(new Headers({ "cf-connecting-ip": "2.2.2.2", "x-forwarded-for": "1.1.1.1" }))).toBe("2.2.2.2");
     expect(clientIp(new Headers())).toBeNull();
+  });
+});
+
+describe("isIpAddress", () => {
+  it("accepts IPv4 and IPv6, rejects anything else", () => {
+    for (const ok of ["132.196.86.5", "2001:4860:4801:10::1", "::ffff:1.2.3.4"]) expect(isIpAddress(ok), ok).toBe(true);
+    for (const bad of ["", "256.1.1.1", "1.2.3", "example.com", "1.2.3.4; drop", "<script>"]) expect(isIpAddress(bad), bad).toBe(false);
   });
 });

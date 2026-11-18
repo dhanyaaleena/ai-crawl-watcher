@@ -32,9 +32,8 @@ describe("CSV", () => {
       user_agent: "GPTBot/1.2",
       page_path: "/blog/post-1",
       ip_hash: null,
-      verification: "verified",
     });
-    expect(line).toBe("2026-01-31T10:23:45Z,https://example.com/blog/post-1,GPTBot,OpenAI,training,GPTBot/1.2,/blog/post-1,,verified\r\n");
+    expect(line).toBe("2026-01-31T10:23:45Z,https://example.com/blog/post-1,GPTBot,OpenAI,training,GPTBot/1.2,/blog/post-1,\r\n");
   });
 });
 

@@ -56,8 +56,6 @@ export interface BotRow {
   visits: number;
   pages: number;
   last_seen: string;
-  verified: number;
-  unverified: number;
 }
 
 export async function getBotBreakdown(siteId: string, f: Filters): Promise<BotRow[]> {
@@ -140,19 +138,16 @@ export interface EventRow {
   page_path: string | null;
   page_url: string;
   user_agent: string;
-  verification: Verification;
 }
 
-export type Verification = "verified" | "unverified" | "unchecked";
-
-const EVENT_COLUMNS = "id, timestamp, bot_name, platform, bot_type, page_path, page_url, user_agent, verification";
+const EVENT_COLUMNS = "id, timestamp, bot_name, platform, bot_type, page_path, page_url, user_agent";
 
 export const ACTIVITY_PAGE_SIZE = 50;
 
 export async function getActivity(
   siteId: string,
   f: Filters,
-  opts: { page: number; q?: string | null; verification?: Verification | null },
+  opts: { page: number; q?: string | null },
 ): Promise<{ rows: EventRow[]; total: number }> {
   const supabase = await createClient();
   const from = (opts.page - 1) * ACTIVITY_PAGE_SIZE;
@@ -164,7 +159,6 @@ export async function getActivity(
     .lt("timestamp", f.until.toISOString());
   if (f.platform) query = query.eq("platform", f.platform);
   if (f.type) query = query.eq("bot_type", f.type);
-  if (opts.verification) query = query.eq("verification", opts.verification);
   if (opts.q) query = query.ilike("page_path", `%${opts.q.replace(/[\\%_]/g, (c) => `\\${c}`)}%`);
   const { data, error, count } = await query
     .order("timestamp", { ascending: false })

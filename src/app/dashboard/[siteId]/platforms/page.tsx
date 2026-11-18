@@ -1,6 +1,5 @@
-import { TriangleAlert } from "lucide-react";
 import type { Metadata } from "next";
-import { PlatformTag, TypeTag, VerificationTag, SampleDataTag } from "@/components/badges";
+import { PlatformTag, SampleDataTag, TypeTag } from "@/components/badges";
 import { Card } from "@/components/card";
 import { EmptyState } from "@/components/empty-state";
 import { PageHeader } from "@/components/page-header";
@@ -84,7 +83,7 @@ export default async function PlatformsPage({ params, searchParams }: PageProps<
 
           <Card title="Bots" flush>
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[760px] text-sm">
+              <table className="w-full min-w-[640px] text-sm">
                 <thead>
                   <tr className="border-y border-line text-left text-xs text-ink-3">
                     <th className="px-5 py-2 font-medium">Bot</th>
@@ -92,7 +91,6 @@ export default async function PlatformsPage({ params, searchParams }: PageProps<
                     <th className="px-3 py-2 font-medium">Purpose</th>
                     <th className="px-3 py-2 text-right font-medium">Visits</th>
                     <th className="px-3 py-2 text-right font-medium">Pages</th>
-                    <th className="px-3 py-2 text-right font-medium">IP check</th>
                     <th className="px-5 py-2 text-right font-medium">Last seen</th>
                   </tr>
                 </thead>
@@ -104,7 +102,6 @@ export default async function PlatformsPage({ params, searchParams }: PageProps<
                       <td className="px-3 py-2.5"><TypeTag type={b.bot_type} /></td>
                       <td className="px-3 py-2.5 text-right tabular-nums">{formatNumber(b.visits)}</td>
                       <td className="px-3 py-2.5 text-right tabular-nums">{formatNumber(b.pages)}</td>
-                      <td className="px-3 py-2.5 text-right"><VerifiedShare verified={Number(b.verified)} unverified={Number(b.unverified)} /></td>
                       <td className="px-5 py-2.5 text-right whitespace-nowrap text-ink-2" title={botTypeLabel(b.bot_type)}>
                         {formatDateTime(b.last_seen, f.tz)}
                       </td>
@@ -117,22 +114,5 @@ export default async function PlatformsPage({ params, searchParams }: PageProps<
         </div>
       )}
     </>
-  );
-}
-
-/** Share of a bot's checkable visits that came from its operator's published IPs. */
-function VerifiedShare({ verified, unverified }: { verified: number; unverified: number }) {
-  const checked = verified + unverified;
-  if (!checked) return <VerificationTag status="unchecked" />;
-  return (
-    <span className="inline-flex items-center justify-end gap-1.5 whitespace-nowrap text-xs" title={`${verified} verified, ${unverified} unverified`}>
-      <span className="tabular-nums text-ink-2">{formatPercent(verified, checked)} verified</span>
-      {unverified > 0 && (
-        <span className="inline-flex items-center gap-0.5 text-warning-ink">
-          <TriangleAlert className="h-3.5 w-3.5" aria-hidden="true" />
-          {formatNumber(unverified)}
-        </span>
-      )}
-    </span>
   );
 }

@@ -10,8 +10,7 @@
 // last 30 days (e.g. visits just sent with visits:send). Needs
 // NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY (read from .env.local
 // unless already set). Running it twice adds history twice. The site is marked
-// as sample data, so the dashboard labels it; generated visits get realistic
-// IP-check labels (scripts/lib/demo-traffic.mjs), never real verification.
+// as sample data, so the dashboard labels it.
 
 import { createClient } from "@supabase/supabase-js";
 import { generateHistory, loadEnv, parsePages } from "./lib/demo-traffic.mjs";

@@ -47,6 +47,14 @@ export function hostMatchesDomain(host: string, domain: string): boolean {
   return h === d || h.endsWith(`.${d}`);
 }
 
+/** True for a plain IPv4 or IPv6 address (used to accept a forwarded crawler IP). */
+export function isIpAddress(value: string): boolean {
+  const s = value.trim();
+  const v4 = s.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
+  if (v4) return v4.slice(1).every((p) => Number(p) <= 255);
+  return s.length <= 45 && /^[0-9a-f:.]+$/i.test(s) && (s.match(/:/g)?.length ?? 0) >= 2;
+}
+
 export function clientIp(headers: Headers): string | null {
   const forwarded = headers.get("x-forwarded-for");
   const ip =

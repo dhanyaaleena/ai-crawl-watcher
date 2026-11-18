@@ -17,12 +17,12 @@ export function serverSnippet(siteId: string, endpoint: string): string {
   return `// middleware.ts (or proxy.ts on Next.js 16+)
 import { NextResponse, type NextFetchEvent, type NextRequest } from "next/server";
 
-const BOTS = /bot|crawl|spider|GPT|Claude|Perplexity|Bytespider|Google-Extended/i;
+const BOTS = /bot|crawl|spider|GPT|Claude|Perplexity|Bytespider|Google-|NotebookLM|^Google$/i;
 
 export function middleware(req: NextRequest, event: NextFetchEvent) {
   const ua = req.headers.get("user-agent") ?? "";
   if (BOTS.test(ua)) {
-    // The crawler's IP lets Crawlwatch check it against the operator's published list.
+    // Send the crawler's IP, so the stored (hashed) address is the crawler's, not this server's.
     const ip = (req.headers.get("x-forwarded-for") ?? "").split(",")[0].trim();
     event.waitUntil(
       fetch("${endpoint}", {

@@ -7,7 +7,6 @@ export const CSV_COLUMNS = [
   "user_agent",
   "page_path",
   "ip_hash",
-  "verification",
 ] as const;
 
 export type CsvRow = Record<(typeof CSV_COLUMNS)[number], string | null>;

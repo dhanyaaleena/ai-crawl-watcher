@@ -49,6 +49,16 @@ describe("classifyUserAgent", () => {
     expect(classifyUserAgent("Mozilla/5.0 HeadlessChrome/120.0")).toMatchObject({ isBot: true, platform: "Unknown" });
   });
 
+  it("identifies Gemini's user-triggered fetchers", () => {
+    expect(classifyUserAgent("Google")).toEqual({ isBot: true, name: "Google (Gemini)", platform: "Google", type: "assistant" });
+    expect(classifyUserAgent("Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; Google-Agent; +https://developers.google.com/crawling/docs/crawlers-fetchers/google-agent) Chrome/131.0.0.0 Safari/537.36")).toMatchObject({ name: "Google-Agent", platform: "Google", type: "assistant" });
+    expect(classifyUserAgent("Google-NotebookLM")).toMatchObject({ name: "Google-GeminiNotebook", platform: "Google" });
+    expect(classifyUserAgent("Google-GeminiNotebook")).toMatchObject({ name: "Google-GeminiNotebook", platform: "Google" });
+    // Only the bare string, never a browser or Googlebot that mentions Google.
+    expect(classifyUserAgent("Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)").name).toBe("Googlebot");
+    expect(classifyUserAgent("Mozilla/5.0 Google Chrome").isBot).toBe(false);
+  });
+
   it("treats an empty user agent as an unknown bot", () => {
     expect(classifyUserAgent("")).toMatchObject({ isBot: true, platform: "Unknown" });
     expect(classifyUserAgent(null)).toMatchObject({ isBot: true, platform: "Unknown" });

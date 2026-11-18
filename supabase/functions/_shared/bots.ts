@@ -39,6 +39,12 @@ export const BOT_SIGNATURES: BotSignature[] = [
   { pattern: /Google-Extended/i, name: "Google-Extended", platform: "Google", type: "training" },
   { pattern: /Google-CloudVertexBot/i, name: "Google-CloudVertexBot", platform: "Google", type: "assistant" },
   { pattern: /Gemini-Deep-Research/i, name: "Gemini-Deep-Research", platform: "Google", type: "assistant" },
+  // Gemini's user-triggered fetchers: Google's AI browsing agent, Gemini Notebook
+  // (formerly NotebookLM), and Gemini chat, which has been measured sending the
+  // bare user agent "Google".
+  { pattern: /Google-Agent/i, name: "Google-Agent", platform: "Google", type: "assistant" },
+  { pattern: /Google-GeminiNotebook|Google-NotebookLM/i, name: "Google-GeminiNotebook", platform: "Google", type: "assistant" },
+  { pattern: /^Google$/, name: "Google (Gemini)", platform: "Google", type: "assistant" },
   // Perplexity
   { pattern: /PerplexityBot/i, name: "PerplexityBot", platform: "Perplexity", type: "search" },
   { pattern: /Perplexity-User/i, name: "Perplexity-User", platform: "Perplexity", type: "assistant" },

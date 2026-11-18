@@ -20,8 +20,6 @@
   --accent-soft: #e6f0fc;
   --good: #0ca30c;
   --good-ink: #006300;
-  --warning: #fab219;
-  --warning-ink: #8a5300;
   --critical: #d03b3b;
   --grid: #ebeae6;
   /* Categorical series, fixed per platform (validated order). */
@@ -54,8 +52,6 @@
     --accent-soft: #16263a;
     --good: #0ca30c;
     --good-ink: #5fcf5f;
-    --warning: #fab219;
-    --warning-ink: #f2b84b;
     --critical: #e66767;
     --grid: #262624;
     --series-1: #3987e5;
@@ -88,8 +84,6 @@
   --color-learn: var(--learn);
   --color-cite: var(--cite);
   --color-critical: var(--critical);
-  --color-warning: var(--warning);
-  --color-warning-ink: var(--warning-ink);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
